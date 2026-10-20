@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Motora</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de celular centralizado, abas fixas no topo (Passageira / Motorista / Central), botão SOS flutuante */
+:root{
+  --bg:#F6F1F4; --surface:#FFFFFF; --ink:#24161F; --muted:#6F5E69; --line:#E7DCE3;
+  --accent:#A8235A; --accent-ink:#FFFFFF; --accent-soft:#F7DFEA;
+  --map:#EEE6EB; --street:#FFFFFF; --sos:#D42A2A; --sos-soft:#FCE3E3;
+  --ok:#1D7A4C; --ok-soft:#DDF2E7; --warn:#9A5C00; --warn-soft:#FBEBCF;
+  --z1:#F3E3EA; --z2:#E9E6F2; --z3:#E5EEE9; --z4:#F2EBDD; --z0:#F0D9E3;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#150F16; --surface:#211923; --ink:#F4EAF0; --muted:#B5A2AE; --line:#3A2D3B;
+  --accent:#E5679A; --accent-ink:#1B0E15; --accent-soft:#3D1F2E;
+  --map:#261D29; --street:#3A2E3D; --sos:#FF5C5C; --sos-soft:#3E1C1C;
+  --ok:#55C893; --ok-soft:#173326; --warn:#EDAA45; --warn-soft:#3A2A12;
+  --z1:#33202B; --z2:#262438; --z3:#1F2F28; --z4:#332B1D; --z0:#3D2533; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#150F16; --surface:#211923; --ink:#F4EAF0; --muted:#B5A2AE; --line:#3A2D3B;
+  --accent:#E5679A; --accent-ink:#1B0E15; --accent-soft:#3D1F2E;
+  --map:#261D29; --street:#3A2E3D; --sos:#FF5C5C; --sos-soft:#3E1C1C;
+  --ok:#55C893; --ok-soft:#173326; --warn:#EDAA45; --warn-soft:#3A2A12;
+  --z1:#33202B; --z2:#262438; --z3:#1F2F28; --z4:#332B1D; --z0:#3D2533; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.08rem;font-weight:600}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:980px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand h1{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.brand small{color:var(--muted);font-size:.8rem}
+.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:999px}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.simbar{max-width:980px;margin:0 auto;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--muted);font-size:.85rem}
+.simbar select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+main{max-width:980px;margin:0 auto;padding-block:8px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.phone{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.btn{border:0;border-radius:14px;padding:13px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink);width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.soft{background:var(--accent-soft);color:var(--ink)}
+.btn.ok{background:var(--ok);color:var(--surface)}
+.btn.sm{padding:8px 12px;border-radius:10px;width:auto;font-size:.88rem}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.chip.hot{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.night{background:var(--z2);color:var(--ink);border-color:transparent}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.bad{background:var(--sos-soft);color:var(--sos);border-color:transparent}
+.av{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--accent-soft)}
+.av.lg{width:84px;height:84px}
+.person{display:flex;gap:12px;align-items:center;min-width:0}
+.person > div{min-width:0}
+.mapbox{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--map);position:relative}
+.mapbox svg{display:block;width:100%;height:auto}
+.mapbox.click svg{cursor:crosshair}
+.maphint{display:block;background:var(--surface);color:var(--muted);font-size:.8rem;padding:7px 10px;border-top:1px solid var(--line)}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px;font-weight:600;font-size:.88rem}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.fare{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:.92rem}
+.fare .tot{font-weight:800;font-size:1.15rem;border-top:1px solid var(--line);padding-top:7px}
+.fare .tot.v{font-family:var(--display)}
+.big{font-family:var(--display);font-size:2rem;font-weight:800;line-height:1}
+.alert{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-weight:600}
+.alert.warn{background:var(--warn-soft);color:var(--warn)}
+.alert.bad{background:var(--sos-soft);color:var(--sos)}
+.alert.ok{background:var(--ok-soft);color:var(--ok)}
+.alert.info{background:var(--accent-soft);color:var(--ink)}
+.pin{font-family:var(--mono);font-size:1.6rem;letter-spacing:.3em;background:var(--bg);border-radius:10px;padding:6px 12px;display:inline-block}
+form.reg{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.82rem;font-weight:600;color:var(--muted)}
+.field input,.field select{font:inherit;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem}
+.check input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.err{color:var(--sos);font-size:.85rem;font-weight:600}
+.photo-pick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photo-pick input[type=file]{font-size:.82rem;max-width:100%}
+.stars{display:flex;gap:6px}
+.stars button{border:0;background:transparent;font-size:1.8rem;color:var(--line);padding:0 2px;line-height:1}
+.stars button.on{color:var(--warn)}
+.sos-fab{position:fixed;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:8;width:74px;height:74px;border-radius:50%;border:4px solid var(--surface);background:var(--sos);color:#fff;font-family:var(--display);font-weight:800;font-size:1.2rem;box-shadow:0 8px 24px rgba(180,20,20,.35)}
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(20,8,14,.62);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.overlay .card{max-width:420px;width:100%;max-height:100%;overflow:auto}
+.count{font-family:var(--display);font-size:4rem;font-weight:800;color:var(--sos);text-align:center;line-height:1}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.central{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.central{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td .pm{display:inline-flex;gap:4px;align-items:center}
+td .pm button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700}
+.log{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto}
+.log div{display:flex;gap:10px;font-size:.88rem;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.log div.sos{background:var(--sos-soft);color:var(--sos);font-weight:600}
+.log div.desvio{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.log time{font-family:var(--mono);font-size:.78rem;opacity:.8;flex:none;padding-top:1px}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:700}
+.switch{width:52px;height:30px;border-radius:999px;border:0;background:var(--line);position:relative;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:left .2s}
+.switch[aria-checked="true"]{background:var(--ok)}
+.switch[aria-checked="true"]::after{left:25px}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}.switch::after{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><h1>Motora</h1><small>corridas para passageiras mulheres</small></div>
+    <nav class="tabs" aria-label="Perfil">
+      <button data-act="view" data-v="pass">Passageira</button>
+      <button data-act="view" data-v="drv">Motorista</button>
+      <button data-act="view" data-v="central">Central</button>
+    </nav>
+  </div>
+</header>
+<div class="simbar">
+  <label for="hourSel">Horário da simulação</label>
+  <select id="hourSel">
+    <option value="auto">Agora (relógio real)</option>
+    <option value="9">09h (diurno)</option>
+    <option value="18">18h (diurno)</option>
+    <option value="23">23h (noturno)</option>
+    <option value="3">03h (noturno)</option>
+  </select>
+  <span id="nightChip"></span>
+  <span id="modeInfo"></span>
+</div>
+<main id="app"></main>
+<div id="fab"></div>
+<div id="modal"></div>
+
+<script>
+// ---------- regras de preço ----------
+const P = { base:4.00, km:2.20, min:0.40, freeWait:180, waitMin:0.60, night:0.20, nightFrom:22, nightTo:6, minFare:8.00, maxKm:100, fee:0.15 };
+const SIM = 20, TICK = 200, SPEED = 40; // espera: 1 s real = 20 s simulados; 40 km/h média cidade + rodovia
+const MAPKM = 240, DEV_KM = 1, JAM_KM = 15; // lado do mapa, desvio que gera alerta e trecho engarrafado simulado, em km
+// frota sustentável: modelos aceitos no cadastro. Elétricos com autonomia aproximada em km; híbridos com o tipo
+const EVS = {'BYD Dolphin':400,'BYD Dolphin Mini':280,'BYD Seal':500,'BYD Yuan Plus':420,'Renault Kwid E-Tech':250,'Renault Megane E-Tech':450,'Chevrolet Bolt EUV':390,'Chevrolet Spark EUV':350,'GWM Ora 03':400,'Volvo EX30':330,'Peugeot e-2008':320,'Fiat 500e':230,'JAC E-JS1':280,'Nissan Leaf':270};
+const HYB = {'Toyota Corolla Hybrid':'híbrido flex','Toyota Corolla Cross Hybrid':'híbrido flex','Toyota Yaris Cross Hybrid':'híbrido flex','Honda Civic e:HEV':'híbrido','BYD King':'híbrido plug-in','BYD Song Pro':'híbrido plug-in','BYD Song Plus':'híbrido plug-in','GWM Haval H6':'híbrido plug-in','Caoa Chery Tiggo 7 Hybrid':'híbrido','Kia Niro Hybrid':'híbrido'};
+const carKind = m => EVS[m] ? `elétrico, ${EVS[m]} km de autonomia` : HYB[m] || '?';
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtKm = v => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' km';
+const mmss = s => { s=Math.max(0,Math.round(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function hourNow(){ const v=document.getElementById('hourSel').value; return v==='auto'? new Date().getHours() : +v; }
+const isNight = h => h>=P.nightFrom || h<P.nightTo;
+
+function surgeOf(name){
+  const r=S.regions[name]; const ratio=r.calls/Math.max(1,r.drivers);
+  return ratio<=1?1:ratio<=1.5?1.2:ratio<=2?1.4:ratio<=3?1.6:1.8;
+}
+function regionOf(p){
+  if(p.x>=80&&p.x<=160&&p.y>=80&&p.y<=160) return 'Centro';
+  return p.y<120 ? (p.x<120?'Região Norte':'Região Leste') : (p.x<120?'Região Oeste':'Região Sul');
+}
+function fare({km,min,waitSec,night,surge}){
+  const corrida = P.base + km*P.km + min*P.min;
+  const dinamica = corrida*(surge-1);
+  const esperaMin = Math.max(0,waitSec-P.freeWait)/60;
+  const espera = esperaMin*P.waitMin;
+  const sub = corrida+dinamica+espera;
+  const noturno = night ? sub*P.night : 0;
+  let total = sub+noturno; const minimo = total<P.minFare;
+  if(minimo) total=P.minFare;
+  return {corrida,dinamica,espera,esperaMin,noturno,total,minimo};
+}
+function fareRows(f, r){
+  return `<div class="fare">
+    <span>Corrida (${fmtKm(r.kmBase??r.km)} · ${Math.round(r.min)} min)</span><span class="num">${brl(f.corrida)}</span>
+    ${f.dinamica>0?`<span>Alta demanda ${esc(r.region)} (${String(r.surge).replace('.',',')}x)</span><span class="num">${brl(f.dinamica)}</span>`:''}
+    <span>Espera (${mmss(r.waitSec)}, 3 min grátis)</span><span class="num">${brl(f.espera)}</span>
+    ${r.night?`<span>Acréscimo noturno (+20%)</span><span class="num">${brl(f.noturno)}</span>`:''}
+    ${f.minimo?`<span class="muted small">Tarifa mínima aplicada</span><span></span>`:''}
+    ${f.adicional>0?`<span>Rota alternativa (+${fmtKm(r.extraKm)}, paga antecipadamente)</span><span class="num">${brl(f.adicional)}</span>`:''}
+    <span class="tot">Total</span><span class="tot v num">${brl(f.total)}</span>
+  </div>`;
+}
+
+// ---------- estado ----------
+const exPass = {name:'Juliana Ferreira',cpf:'123.456.789-09',birth:'1994-05-12',phone:'(11) 98765-4321',email:'juliana@exemplo.com',emerName:'Marta Ferreira (mãe)',emerPhone:'(11) 91234-5678'};
+const exDrv = {name:'Rosana Lima',cpf:'987.654.321-00',birth:'1986-09-03',phone:'(11) 99876-1122',email:'rosana@exemplo.com',emerName:'Paula Lima (irmã)',emerPhone:'(11) 93456-7788',sex:'F',cnh:'04512378901',car:'BYD Dolphin',color:'Branco',year:'2021',plate:'RTA-4F21'};
+const S = {
+  view:'pass',
+  pass:{reg:false, data:{...exPass}, photo:null, rating:4.9, err:'', prefFem:false},
+  drv:{reg:false, data:{...exDrv}, photo:null, rating:4.95, err:'', online:true, pos:{x:115,y:130}, earnings:0, trips:0},
+  editing:null, pick:'dest', origin:{x:100,y:140}, dest:{x:150,y:110},
+  regions:{'Centro':{calls:18,drivers:9},'Região Norte':{calls:6,drivers:7},'Região Leste':{calls:22,drivers:8},'Região Oeste':{calls:9,drivers:5},'Região Sul':{calls:5,drivers:6}},
+  ride:null, log:[], sos:null, sosPending:null, shared:false
+};
+function log(type,text){ S.log.unshift({t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),type,text}); }
+
+function avatarSvg(name, hue){
+  const ini=name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="hsl(${hue},55%,62%)"/><circle cx="40" cy="32" r="14" fill="hsl(${hue},45%,85%)"/><path d="M14 76c4-16 16-22 26-22s22 6 26 22z" fill="hsl(${hue},45%,85%)"/><text x="40" y="38" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="hsl(${hue},55%,30%)">${ini}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+// artigo e sufixo conforme o sexo informado no cadastro do(a) motorista
+const dm = () => S.drv.data.sex==='M' ? {a:'o',A:'O',d:'do',p:'pelo',s:''} : {a:'a',A:'A',d:'da',p:'pela',s:'a'};
+const photoOf = who => S[who].photo || avatarSvg(S[who].data.name||'?', who==='pass'?330:285);
+
+// ---------- geometria ----------
+const pathOf = (a,b) => [a,{x:b.x,y:a.y},b];
+const dist = (a,b) => Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+function pathLen(p){ let s=0; for(let i=1;i<p.length;i++) s+=dist(p[i-1],p[i]); return s; }
+function pointAt(p,d){
+  for(let i=1;i<p.length;i++){ const L=dist(p[i-1],p[i]);
+    if(d<=L||i===p.length-1){ const f=L?Math.min(1,d/L):1; return {x:p[i-1].x+(p[i].x-p[i-1].x)*f, y:p[i-1].y+(p[i].y-p[i-1].y)*f, horiz:p[i-1].y===p[i].y}; }
+    d-=L; }
+  return p[p.length-1];
+}
+function estimate(o,d){
+  const km=dist(o,d), min=km/SPEED*60, region=regionOf(o), surge=surgeOf(region), night=isNight(hourNow());
+  return {km,min,region,surge,night,waitSec:0,f:fare({km,min,waitSec:0,night,surge})};
+}
+function carPos(){
+  const r=S.ride; if(!r) return null;
+  if(r.status==='accepted') return pointAt(r.approach,r.approachDone);
+  if(r.status==='arrived') return r.o;
+  if(r.status==='ontrip'||r.status==='done'){ const p=pointAt(r.path,r.done); return p.horiz?{x:p.x,y:p.y+r.deviate}:{x:p.x+r.deviate,y:p.y}; }
+  return null;
+}
+
+// ---------- mapa ----------
+const K=300/MAPKM;
+function mapSvg({clickable=false, limit=false, idle=false}={}){
+  const r=S.ride, o=r?r.o:S.origin, d=r?r.d:S.dest;
+  let s=`<svg viewBox="0 0 300 300" role="img" aria-label="Mapa simulado da cidade" ${clickable?'data-act="map"':''}>`;
+  s+=`<rect width="300" height="300" fill="var(--map)"/>`;
+  s+=`<rect x="0" y="0" width="150" height="150" fill="var(--z1)"/><rect x="150" y="0" width="150" height="150" fill="var(--z2)"/><rect x="0" y="150" width="150" height="150" fill="var(--z3)"/><rect x="150" y="150" width="150" height="150" fill="var(--z4)"/><rect x="100" y="100" width="100" height="100" fill="var(--z0)"/>`;
+  for(let i=0;i<=12;i++){ const w=i%4===0?5:2.5; s+=`<line x1="${i*25}" y1="0" x2="${i*25}" y2="300" stroke="var(--street)" stroke-width="${w}"/><line x1="0" y1="${i*25}" x2="300" y2="${i*25}" stroke="var(--street)" stroke-width="${w}"/>`; }
+  const lab=(x,y,t,a='start')=>`<text x="${x}" y="${y}" text-anchor="${a}" font-size="9" font-weight="700" fill="var(--muted)" font-family="Figtree,sans-serif" letter-spacing=".08em">${t.toUpperCase()}</text>`;
+  s+=lab(8,16,'Região Norte')+lab(292,16,'Região Leste','end')+lab(8,292,'Região Oeste')+lab(292,292,'Região Sul','end')+lab(130,114,'Centro');
+  if(limit && o){ const pts=[[o.x+P.maxKm,o.y],[o.x,o.y+P.maxKm],[o.x-P.maxKm,o.y],[o.x,o.y-P.maxKm]].map(([x,y])=>`${x*K},${y*K}`).join(' ');
+    s+=`<polygon points="${pts}" fill="var(--accent)" fill-opacity=".06" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>`; }
+  if(r && r.status==='accepted'){ s+=`<polyline points="${r.approach.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--muted)" stroke-width="3" stroke-dasharray="4 4"/>`; }
+  const route = r&&r.path ? r.path : (o&&d?pathOf(o,d):null);
+  if(route){ s+=`<polyline points="${route.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`; }
+  if(r && r.traffic){ const a=r.done, seg=[pointAt(r.path,a)]; for(let k=1;k<=10;k++) seg.push(pointAt(r.path,Math.min(r.km,a+k*JAM_KM/10)));
+    s+=`<polyline points="${seg.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--sos)" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 3"/>`; }
+  if(r && r.proposal){ s+=`<polyline points="${r.proposal.alt.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--warn)" stroke-width="4" stroke-dasharray="6 4" stroke-linejoin="round"/>`; }
+  if(o){ s+=`<circle cx="${o.x*K}" cy="${o.y*K}" r="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/><text x="${o.x*K}" y="${o.y*K+3.5}" font-size="10" text-anchor="middle" font-weight="800" fill="var(--accent)" font-family="Figtree,sans-serif">A</text>`; }
+  if(d){ s+=`<path d="M${d.x*K} ${d.y*K} l-8 -14 a9 9 0 1 1 16 0 z" fill="var(--accent)"/><text x="${d.x*K}" y="${d.y*K-15}" font-size="9" text-anchor="middle" font-weight="800" fill="var(--accent-ink)" font-family="Figtree,sans-serif">B</text>`; }
+  const c = carPos() || (idle? S.drv.pos : null);
+  if(c){ const off = r && r.deviate>DEV_KM; s+=`<g transform="translate(${c.x*K},${c.y*K})"><circle r="13" fill="${off?'var(--warn)':'var(--ink)'}" fill-opacity=".18"/><rect x="-8" y="-6" width="16" height="12" rx="4" fill="${off?'var(--warn)':'var(--ink)'}"/><rect x="-5" y="-4" width="10" height="4" rx="1.5" fill="var(--surface)"/></g>`; }
+  s+=`<text x="292" y="${limit?280:0}" font-size="0"></text></svg>`;
+  return s;
+}
+
+// ---------- telas: cadastro ----------
+function regForm(who){
+  const u=S[who], d=u.data, drv=who==='drv';
+  const f=(id,label,val,type='text',extra='')=>`<div class="field"><label for="${who}-${id}">${label}</label><input id="${who}-${id}" name="${id}" type="${type}" value="${esc(val)}" ${extra}></div>`;
+  return `<div class="card">
+    <div><p class="eyebrow">${drv?'Cadastro de motorista':'Cadastro de passageira'}</p><h2>${drv?'Dirija com a Motora':'Viaje com segurança'}</h2></div>
+    <p class="muted small">Campos preenchidos com dados de exemplo. ${drv?'Motoristas podem ser homens ou mulheres. Todos passam por verificação facial, de documento e de antecedentes criminais.':'Passageiras são apenas mulheres (cis e trans), com verificação facial e de documento.'}</p>
+    <form class="reg" data-who="${who}" novalidate>
+      <div class="photo-pick">
+        <img class="av lg" src="${photoOf(who)}" alt="Foto de perfil">
+        <div class="field"><label for="${who}-photo">Foto de rosto (selfie) *</label><input id="${who}-photo" type="file" accept="image/*" data-photo="${who}">
+        <span class="small muted">${u.photo?'Foto carregada.':'Sem foto, usamos um avatar de exemplo.'}</span></div>
+      </div>
+      ${f('name','Nome completo *',d.name)}
+      <div class="grid2">${f('cpf','CPF *',d.cpf,'text','inputmode="numeric"')}${f('birth','Nascimento *',d.birth,'date')}</div>
+      <div class="grid2">${f('phone','Celular *',d.phone,'tel')}${f('email','E-mail *',d.email,'email')}</div>
+      <div class="grid2">${f('emerName','Contato de emergência *',d.emerName)}${f('emerPhone','Telefone do contato *',d.emerPhone,'tel')}</div>
+      ${drv?`<div class="field"><label for="drv-sex">Sexo *</label><select id="drv-sex" name="sex"><option value="F" ${d.sex!=='M'?'selected':''}>Feminino</option><option value="M" ${d.sex==='M'?'selected':''}>Masculino</option></select></div>
+      <p class="eyebrow">Veículo e habilitação</p>
+      <div class="alert ok small"><span>A frota Motora é elétrica ou híbrida. Carros movidos só a combustão não são aceitos.</span></div>
+      <div class="grid2">${f('cnh','Nº da CNH (com EAR) *',d.cnh,'text','inputmode="numeric"')}${f('plate','Placa *',d.plate)}</div>
+      <div class="grid2"><div class="field"><label for="drv-car">Modelo elétrico ou híbrido *</label><select id="drv-car" name="car"><optgroup label="Elétricos">${Object.keys(EVS).map(m=>`<option ${m===d.car?'selected':''}>${m}</option>`).join('')}</optgroup><optgroup label="Híbridos">${Object.keys(HYB).map(m=>`<option ${m===d.car?'selected':''}>${m}</option>`).join('')}</optgroup></select></div>${f('color','Cor *',d.color)}</div>
+      <div class="grid2">${f('year','Ano (2014 ou mais novo) *',d.year,'number')}<div class="field"><label for="drv-doc">CRLV e antecedentes</label><input id="drv-doc" type="file" accept="image/*,application/pdf"></div></div>`
+      :`<div class="field"><label for="pass-doc">Documento com foto (RG ou CNH)</label><input id="pass-doc" type="file" accept="image/*,application/pdf"></div>`}
+      <label class="check"><input type="checkbox" id="${who}-decl" name="decl"> <span>${drv?'Declaro que as informações são verdadeiras e concordo com a verificação de identidade e de antecedentes.':'Declaro que sou mulher e concordo com a verificação de identidade.'} Declaração falsa leva ao bloqueio da conta.</span></label>
+      <label class="check"><input type="checkbox" id="${who}-terms" name="terms" checked> <span>${drv?'Autorizo o monitoramento do percurso e o envio da minha localização à central em caso de socorro.':'Ao iniciar cada corrida, minha rota é compartilhada automaticamente com meu contato de emergência. Autorizo também o monitoramento do percurso pela central.'}</span></label>
+      ${u.err?`<p class="err" role="alert">${esc(u.err)}</p>`:''}
+      <button class="btn" type="submit">${u.reg?'Salvar cadastro':'Criar conta e verificar'}</button>
+    </form>
+  </div>`;
+}
+// ---------- servidor (ativo quando o app é aberto pelo servidor Python) ----------
+const API = { on:false };
+async function api(method, path, body){
+  const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const j = await r.json().catch(()=>({})); if(!r.ok) throw j; return j;
+}
+function apiErr(e){ const d=e&&e.detail; return d&&d.erros ? d.erros.join(' ') : (typeof d==='string' ? d : 'Não foi possível falar com o servidor.'); }
+function sync(method, path, body, ok){
+  if(!API.on) return;
+  api(method,path,body).then(j=>{ if(ok){ ok(j); render(); } }).catch(e=>{ log('desvio','Servidor: '+apiErr(e)); render(); });
+}
+const rid = () => S.ride && S.ride.id;
+function cadastroPayload(who,d,u){
+  const base={nome:d.name,cpf:d.cpf,nascimento:d.birth,telefone:d.phone,email:d.email,contato_nome:d.emerName,contato_telefone:d.emerPhone,aceite_monitoramento:true,foto:u.photo};
+  return who==='pass' ? {...base,declaracao_mulher:true}
+    : {...base,sexo:d.sex,declaracao_veracidade:true,cnh:d.cnh,placa:d.plate,modelo:d.car,cor:d.color,ano:+d.year};
+}
+(async()=>{ try{ const r=await fetch('/api/saude'); const j=r.ok?await r.json():null; if(j&&j.ok){ API.on=true; render(); } }catch(_){} })();
+
+function submitReg(form){
+  const who=form.dataset.who, u=S[who], fd=new FormData(form), d={};
+  for(const k of Object.keys(u.data)) d[k]=(fd.get(k)||'').toString().trim();
+  const digits=s=>s.replace(/\D/g,'');
+  let err='';
+  const age = d.birth ? (Date.now()-new Date(d.birth))/31557600000 : 0;
+  if(!d.name || d.name.split(/\s+/).length<2) err='Informe o nome completo.';
+  else if(digits(d.cpf).length!==11) err='O CPF precisa ter 11 dígitos.';
+  else if(age<18) err='É preciso ter 18 anos ou mais.';
+  else if(digits(d.phone).length<10) err='Informe um celular com DDD.';
+  else if(!/^\S+@\S+\.\S+$/.test(d.email)) err='Informe um e-mail válido.';
+  else if(!d.emerName || digits(d.emerPhone).length<10) err='Informe o contato de emergência com telefone.';
+  else if(who==='drv' && digits(d.cnh).length!==11) err='A CNH precisa ter 11 dígitos.';
+  else if(who==='drv' && !/^[A-Z]{3}-?\d[A-Z0-9]\d{2}$/i.test(d.plate)) err='Placa inválida. Use o formato ABC-1D23.';
+  else if(who==='drv' && !EVS[d.car] && !HYB[d.car]) err='Só aceitamos veículos elétricos ou híbridos da lista.';
+  else if(who==='drv' && (+d.year<2014)) err='O veículo precisa ser 2014 ou mais novo.';
+  else if(!fd.get('decl')) err='Confirme a declaração para continuar.';
+  else if(!fd.get('terms')) err='O monitoramento de percurso é obrigatório para usar o app.';
+  u.data=d; u.err=err;
+  if(!err && API.on){ api('POST', who==='pass'?'/api/passageiras':'/api/motoristas', cadastroPayload(who,d,u))
+      .then(j=>{ u.id=j.id; }).catch(e=>{ u.reg=false; u.err=apiErr(e); render(); }); }
+  if(!err){ const first=!u.reg; u.reg=true; S.editing=null; log('info',`${who==='drv'?'Motorista':'Passageira'} ${d.name} ${first?(who==='drv'&&d.sex==='M'?'cadastrado.':'cadastrada.')+' Verificação facial e documento aprovados (simulado).':'atualizou o cadastro.'}`); }
+  render();
+}
+
+// ---------- telas: passageira ----------
+function passView(){
+  const u=S.pass; if(!u.reg||S.editing==='pass') return regForm('pass');
+  const r=S.ride;
+  const top=`<div class="card"><div class="row between"><div class="person"><img class="av" src="${photoOf('pass')}" alt=""><div><h3>Olá, ${esc(u.data.name.split(' ')[0])}</h3><p class="small muted">★ ${u.rating.toString().replace('.',',')} · conta verificada</p></div></div><button class="btn ghost sm" data-act="edit" data-who="pass">Cadastro</button></div></div>`;
+  if(!r || r.status==='cancel'){
+    const e=S.dest?estimate(S.origin,S.dest):null, over=e&&e.km>P.maxKm;
+    return top+`<div class="card">
+      <div><p class="eyebrow">Nova corrida</p><h2>Para onde vamos?</h2></div>
+      <div class="seg" role="group" aria-label="Toque no mapa para definir"><button data-act="pick" data-v="origin" aria-pressed="${S.pick==='origin'}">A · Embarque</button><button data-act="pick" data-v="dest" aria-pressed="${S.pick==='dest'}">B · Destino</button></div>
+      <div class="toggle"><button class="switch" role="switch" aria-checked="${u.prefFem}" aria-label="Prefiro motorista mulher" data-act="prefFem"></button><span>Prefiro motorista mulher <span class="small muted">(pode demorar mais)</span></span></div>
+      <div class="mapbox click">${mapSvg({clickable:true,limit:true})}<span class="maphint">Toque para marcar ${S.pick==='dest'?'o destino':'o embarque'} · área tracejada = ${P.maxKm} km</span></div>
+      ${e?`<div class="row"><span class="chip">${esc(e.region)}</span>${e.surge>1?`<span class="chip hot">Alta demanda ${String(e.surge).replace('.',',')}x</span>`:''}${e.night?`<span class="chip night">Noturno +20%</span>`:''}</div>
+      ${over?`<div class="alert bad">Destino a ${fmtKm(e.km)} pelo trajeto. O limite por corrida é ${P.maxKm} km. Escolha um ponto dentro da área tracejada.</div>`
+      :fareRows(e.f,e)}
+      <button class="btn" data-act="request" ${over?'disabled':''}>Pedir corrida ${over?'':'· '+brl(e.f.total)}</button>`:'<p class="muted">Toque no mapa para escolher o destino.</p>'}
+      ${r&&r.status==='cancel'?`<p class="small muted">Corrida anterior cancelada.</p>`:''}
+    </div>`;
+  }
+  const d=S.drv, dcard=`<div class="person"><img class="av" src="${photoOf('drv')}" alt="Foto ${dm().d} motorista"><div><h3>${esc(d.data.name)}</h3><p class="small muted">★ ${d.rating.toString().replace('.',',')} · ${esc(d.data.car)} ${esc(d.data.color)} · <span class="chip ok">⚡ ${EVS[d.data.car]?'elétrico':'híbrido'}</span></p><p class="num small"><strong>${esc(d.data.plate.toUpperCase())}</strong></p></div></div>`;
+  if(r.status==='searching') return top+`<div class="card"><p class="eyebrow">Corrida solicitada</p><h2 class="pulse">${r.declined?'Buscando outro(a) motorista…':r.prefFem?'Procurando motorista mulher perto de você…':'Procurando motorista perto de você…'}</h2>
+    <div class="mapbox">${mapSvg()}</div>${fareRows(r.f0,r)}
+    <div class="alert info small">Demo: abra a aba Motorista para aceitar a corrida.</div>
+    <button class="btn ghost" data-act="cancel">Cancelar pedido</button></div>`;
+  if(r.status==='accepted'){ const eta=(pathLen(r.approach)-r.approachDone)/SPEED*60;
+    return top+`<div class="card"><p class="eyebrow">Motorista a caminho · chega em ${Math.max(1,Math.ceil(eta))} min</p>${dcard}
+    <div class="mapbox">${mapSvg()}</div>
+    <div class="row between"><span>Código de embarque</span><span class="pin">${r.pin}</span></div>
+    <p class="small muted">Confira a foto, a placa e informe o código ${dm().a==='o'?'ao':'à'} motorista antes de entrar.</p>
+    ${shareBtn()}<button class="btn ghost" data-act="cancel">Cancelar corrida</button></div>`; }
+  if(r.status==='arrived') return top+`<div class="card"><p class="eyebrow">${dm().a==='o'?'Seu':'Sua'} motorista chegou</p>${dcard}
+    ${waitBox(r)}<div class="row between"><span>Código de embarque</span><span class="pin">${r.pin}</span></div>
+    <div class="mapbox">${mapSvg()}</div>${shareBtn()}</div>`;
+  if(r.status==='ontrip') return top+`<div class="card"><p class="eyebrow">Em viagem · ${esc(r.region)}</p>${dcard}
+    ${monitorBox(r,'pass')}${trafficBox(r,'pass')}${r.autoShared?`<div class="alert ok"><span>Rota compartilhada automaticamente com ${esc(S.pass.data.emerName)}. Ela acompanha o trajeto ao vivo.</span>${r.shareLink?`<div class="row between"><span class="small num" style="word-break:break-all;font-weight:500">${esc(r.shareLink)}</span><button class="btn sm soft" data-act="copyLink">Copiar link</button></div>`:''}</div>`:''}
+    <div class="mapbox">${mapSvg()}</div>
+    ${r.stopping?waitBox(r,true):''}
+    <div class="row between"><span>Valor até agora</span><span class="big num">${brl(liveFare(r).total)}</span></div>
+    <div class="btns"><button class="btn soft" data-act="stop">${r.stopping?'Retomar viagem':'Pedir parada'}</button>${shareBtn(true)}</div></div>`;
+  if(r.status==='done') return top+`<div class="card"><p class="eyebrow">Corrida concluída</p><h2>Você chegou. Que bom!</h2>${dcard}
+    ${fareRows(r.final,{...r,min:Math.max(0,r.movingSec/60-(r.extraMin||0))})}
+    <p class="small muted">Avalie ${dm().a} motorista</p>${stars(r,'rateDrv')}
+    <button class="btn" data-act="newride">Nova corrida</button></div>`;
+  return top;
+}
+function shareBtn(compact){ return `<button class="btn ghost" data-act="share">${S.shared?'Viagem compartilhada ✓':(compact?'Compartilhar':'Compartilhar viagem com contato')}</button>`; }
+function stars(r,key){ return `<div class="stars" role="group" aria-label="Nota">${[1,2,3,4,5].map(n=>`<button aria-label="${n} estrelas" data-act="rate" data-k="${key}" data-n="${n}" class="${(r[key]||0)>=n?'on':''}">★</button>`).join('')}</div>`; }
+function liveFare(r){
+  const f=fare({km:r.kmBase??r.km,min:Math.max(0,r.movingSec/60-(r.extraMin||0)),waitSec:r.waitSec,night:r.night,surge:r.surge});
+  f.adicional=r.prepaid||0; f.total+=f.adicional; return f;
+}
+// ---------- trânsito e rota alternativa ----------
+function pathUntil(p,d){ const out=[p[0]]; let left=d;
+  for(let i=1;i<p.length;i++){ const L=dist(p[i-1],p[i]); if(left<=L){ const q=pointAt(p,d); out.push({x:q.x,y:q.y}); return out; } out.push(p[i]); left-=L; }
+  return out; }
+function proposeAlt(r){
+  const q=pointAt(r.path,r.done), p={x:q.x,y:q.y}, d=r.d;
+  const remaining=r.km-r.done, off=6;
+  // desvia pelo eixo vertical e passa um pouco do destino, para fugir do trecho parado
+  const y2=Math.max(0,Math.min(MAPKM,d.y+(d.y<p.y?-off:off)));
+  const alt=[p,{x:p.x,y:y2},{x:d.x,y:y2},d];
+  const extraKm=Math.max(0,pathLen(alt)-remaining), extraMin=extraKm/SPEED*60;
+  const valor=Math.round((extraKm*P.km+extraMin*P.min)*r.surge*(r.night?1+P.night:1)*100)/100;
+  return {alt,extraKm,extraMin,valor,savesMin:Math.round((Math.max(0,remaining-JAM_KM)/SPEED + Math.min(remaining,JAM_KM)/(SPEED/3))*60 - pathLen(alt)/SPEED*60)};
+}
+function trafficBox(r,who){
+  const pr=r.proposal;
+  if(pr) return who==='pass'
+    ? `<div class="alert warn"><span>Trânsito intenso à frente. ${dm().A} motorista sugere uma rota alternativa: +${fmtKm(pr.extraKm)} e chegada cerca de ${Math.max(1,pr.savesMin)} min antes.</span>
+       <div class="row between"><span>Valor adicional, cobrado agora</span><span class="big num">${brl(pr.valor)}</span></div>
+       <div class="alert info"><span>Lembrete: confira o engarrafamento antes de aceitar.</span>
+         <ul class="steps small" style="font-weight:500"><li>No mapa, o trecho em <strong style="color:var(--sos)">vermelho</strong> é o trânsito parado e o tracejado <strong style="color:var(--warn)">laranja</strong> é a rota sugerida.</li><li>Velocidade atual do carro: <strong class="num">${Math.round(SPEED/3)} km/h</strong> (normal: ${SPEED} km/h).</li><li>Olhe pela janela e veja se o trânsito está mesmo parado.</li></ul>
+         <div class="toggle"><button class="switch" role="switch" aria-checked="${!!pr.seen}" aria-label="Confirmei o engarrafamento" data-act="altSeen"></button><span>Vi o engarrafamento e confirmo</span></div></div>
+       <div class="btns"><button class="btn ghost" data-act="altNo">Manter rota</button><button class="btn" data-act="altYes" ${pr.seen?'':'disabled'}>Aceitar e pagar</button></div></div>`
+    : `<div class="alert warn"><span class="pulse">Aguardando a passageira confirmar a rota alternativa (+${fmtKm(pr.extraKm)}, ${brl(pr.valor)} adicional).</span></div>`;
+  if(r.traffic) return `<div class="alert warn"><span>Trânsito intenso no trajeto${r.altDeclined?'. A passageira preferiu manter a rota.':'.'}</span></div>`;
+  return '';
+}
+function waitBox(r,stop){
+  const free=Math.max(0,P.freeWait-r.waitSec), charged=Math.max(0,r.waitSec-P.freeWait);
+  const rate=P.waitMin*(r.night?1+P.night:1);
+  return `<div class="alert ${charged>0?'warn':'info'}"><div class="row between"><span>${stop?'Parada em andamento':'Tempo de espera'}</span><span class="big num">${mmss(r.waitSec)}</span></div>
+  <span class="small">${free>0?`Grátis por mais ${mmss(free)}. Depois, ${brl(rate)}/min${r.night?' (com acréscimo noturno)':''}.`:`Cobrando ${brl(rate)}/min${r.night?' com acréscimo noturno':''}. ${brl(liveFare(r).espera*(r.night?1+P.night:1))} até agora.`}</span></div>`;
+}
+function monitorBox(r,who){
+  const off=r.deviate>DEV_KM;
+  let h=`<div class="alert ${off?'warn':'ok'}"><span>${off?`Desvio de rota: ${fmtKm(r.deviate)} fora do trajeto. Central notificada.`:'Rota monitorada: dentro do trajeto previsto.'}</span></div>`;
+  if(who==='pass' && r.checkPending) h+=`<div class="alert bad"><span>Notamos uma mudança no trajeto. Está tudo bem?</span><div class="btns"><button class="btn ok" data-act="imok">Estou bem</button><button class="btn" style="background:var(--sos);color:#fff" data-act="sos" data-by="pass">Pedir socorro</button></div></div>`;
+  return h;
+}
+
+// ---------- telas: motorista ----------
+function drvView(){
+  const u=S.drv; if(!u.reg||S.editing==='drv') return regForm('drv');
+  const r=S.ride;
+  const top=`<div class="card"><div class="row between"><div class="person"><img class="av" src="${photoOf('drv')}" alt=""><div><h3>${esc(u.data.name)}</h3><p class="small muted">⚡ ${esc(u.data.car)} (${carKind(u.data.car)}) · <span class="num">${esc(u.data.plate.toUpperCase())}</span></p></div></div><button class="btn ghost sm" data-act="edit" data-who="drv">Cadastro</button></div>
+    <div class="row between"><div class="toggle"><button class="switch" role="switch" aria-checked="${u.online}" aria-label="Disponível" data-act="online"></button>${u.online?'Disponível':'Offline'}</div><div class="small muted">Hoje <strong class="num">${brl(u.earnings)}</strong> · ${u.trips} corridas</div></div></div>`;
+  const p=S.pass, pcard=`<div class="person"><img class="av" src="${photoOf('pass')}" alt="Foto da passageira"><div><h3>${esc(p.data.name)}</h3><p class="small muted">★ ${p.rating.toString().replace('.',',')} · verificada</p></div></div>`;
+  if(!r || r.status==='cancel' || (r.status==='searching' && (r.declined||!u.online||(r.prefFem&&u.data.sex==='M'))) ){
+    const list=Object.keys(S.regions).map(n=>({n,m:surgeOf(n),...S.regions[n]})).sort((a,b)=>b.m-a.m);
+    return top+`<div class="card"><p class="eyebrow">Demanda por região</p><h2>${u.online?'Aguardando chamadas':'Você está offline'}</h2>
+      <div class="mapbox">${mapSvg({idle:true})}</div>
+      <table><thead><tr><th>Região</th><th>Chamadas</th><th>Motoristas</th><th>Tarifa</th></tr></thead><tbody>
+      ${list.map(x=>`<tr><td>${x.n}</td><td class="num">${x.calls}</td><td class="num">${x.drivers}</td><td>${x.m>1?`<span class="chip hot">${String(x.m).replace('.',',')}x</span>`:'<span class="chip">normal</span>'}</td></tr>`).join('')}
+      </tbody></table><p class="small muted">Regiões com mais chamadas que motoristas ficam com tarifa dinâmica.</p></div>`;
+  }
+  if(r.status==='searching') return top+`<div class="card" style="border-color:var(--accent)"><p class="eyebrow">Nova chamada</p>${pcard}
+    <div class="mapbox">${mapSvg()}</div>
+    <div class="row"><span class="chip">${fmtKm(r.km)} · ${Math.round(r.min)} min</span><span class="chip">${esc(r.region)}</span>${r.surge>1?`<span class="chip hot">${String(r.surge).replace('.',',')}x</span>`:''}${r.night?'<span class="chip night">Noturno</span>':''}</div>
+    <div class="row between"><span>Você recebe</span><span class="big num">${brl(r.f0.total*(1-P.fee))}</span></div>
+    <div class="btns"><button class="btn ghost" data-act="decline">Recusar</button><button class="btn" data-act="accept">Aceitar</button></div></div>`;
+  if(r.status==='accepted') return top+`<div class="card"><p class="eyebrow">Indo buscar a passageira</p>${pcard}<div class="mapbox">${mapSvg()}</div><p class="small muted">Embarque no ponto A. A espera começa a contar quando você chegar.</p></div>`;
+  if(r.status==='arrived') return top+`<div class="card"><p class="eyebrow">No ponto de embarque</p>${pcard}${waitBox(r)}
+    <div class="field"><label for="pinIn">Código informado pela passageira</label><input id="pinIn" inputmode="numeric" maxlength="4" placeholder="4 dígitos" style="font-family:var(--mono);font-size:1.3rem;letter-spacing:.3em"></div>
+    ${r.pinErr?'<p class="err">Código não confere. Confirme com a passageira.</p>':''}
+    <p class="small muted">Demo: o código é <span class="num">${r.pin}</span>.</p>
+    <button class="btn" data-act="start">Iniciar corrida</button></div>`;
+  if(r.status==='ontrip') return top+`<div class="card"><p class="eyebrow">Em viagem</p>${pcard}${monitorBox(r,'drv')}${trafficBox(r,'drv')}<p class="small muted">A rota desta corrida foi compartilhada com o contato de emergência da passageira.</p>
+    <div class="mapbox">${mapSvg()}</div>${r.stopping?waitBox(r,true):''}
+    <div class="row between"><span>Valor até agora</span><span class="big num">${brl(liveFare(r).total)}</span></div>
+    <div class="btns"><button class="btn soft" data-act="stop">${r.stopping?'Retomar viagem':'Registrar parada'}</button><button class="btn ghost" data-act="deviate">${r.devTarget>0?'Voltar à rota':'Simular desvio (demo)'}</button></div>
+    ${r.proposal?'':!r.traffic?'<button class="btn ghost" data-act="traffic">Simular trânsito à frente (demo)</button>':r.altDeclined?'':'<button class="btn" data-act="altPropose">Propor rota alternativa à passageira</button>'}</div>`;
+  if(r.status==='done') return top+`<div class="card"><p class="eyebrow">Corrida concluída</p><div class="row between"><span>Seu ganho (85%)</span><span class="big num">${brl(r.final.total*(1-P.fee))}</span></div>
+    ${fareRows(r.final,{...r,min:Math.max(0,r.movingSec/60-(r.extraMin||0))})}<p class="small muted">Avalie a passageira</p>${stars(r,'ratePass')}
+    <button class="btn" data-act="newride">Voltar a receber chamadas</button></div>`;
+  return top;
+}
+
+// ---------- central ----------
+function centralView(){
+  const r=S.ride;
+  const rows=Object.keys(S.regions).map(n=>{const x=S.regions[n],m=surgeOf(n);return `<tr><td>${n}</td>
+    <td><span class="pm"><button data-act="reg" data-n="${n}" data-k="calls" data-d="-1" aria-label="Menos chamadas">−</button><span class="num">${x.calls}</span><button data-act="reg" data-n="${n}" data-k="calls" data-d="1" aria-label="Mais chamadas">+</button></span></td>
+    <td><span class="pm"><button data-act="reg" data-n="${n}" data-k="drivers" data-d="-1" aria-label="Menos motoristas">−</button><span class="num">${x.drivers}</span><button data-act="reg" data-n="${n}" data-k="drivers" data-d="1" aria-label="Mais motoristas">+</button></span></td>
+    <td>${m>1?`<span class="chip hot">${String(m).replace('.',',')}x</span>`:'<span class="chip">1x</span>'}</td></tr>`}).join('');
+  const st={searching:'Buscando motorista',accepted:'Motorista a caminho',arrived:'No embarque',ontrip:'Em viagem',done:'Concluída',cancel:'Cancelada'};
+  return `<div class="central">
+    <div class="card"><p class="eyebrow">Central de segurança</p><h2>Monitoramento ao vivo</h2>
+      ${S.sos?`<div class="alert bad">SOS ativo, acionado ${S.sos.by==='pass'?'pela passageira':dm().p+' motorista'} às ${S.sos.t}. Localização sendo enviada.</div>`:''}
+      <div class="mapbox">${mapSvg({idle:!r})}</div>
+      ${r?`<div class="row between"><span>${st[r.status]||''}</span><span class="row">${r.deviate>DEV_KM?'<span class="chip bad">Fora da rota</span>':r.status==='ontrip'?'<span class="chip ok">Na rota</span>':''}${r.stopping?'<span class="chip hot">Parada</span>':''}</span></div>
+      <div class="row"><div class="person"><img class="av" src="${photoOf('pass')}" alt=""><div><p class="small"><strong>${esc(S.pass.data.name)}</strong></p><p class="small muted">Passageira</p></div></div><div class="person"><img class="av" src="${photoOf('drv')}" alt=""><div><p class="small"><strong>${esc(S.drv.data.name)}</strong></p><p class="small muted num">${esc(S.drv.data.plate.toUpperCase())}</p></div></div></div>`:'<p class="muted">Nenhuma corrida em andamento.</p>'}
+      <p class="eyebrow">Eventos</p>
+      <div class="log">${S.log.length?S.log.map(l=>`<div class="${l.type}"><time>${l.t}</time><span>${esc(l.text)}</span></div>`).join(''):'<div><span class="muted">Sem eventos ainda.</span></div>'}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="card"><p class="eyebrow">Tarifa dinâmica por região</p><h3>Chamadas × motoristas online</h3>
+        <div style="overflow-x:auto"><table><thead><tr><th>Região</th><th>Chamadas</th><th>Motoristas</th><th>Fator</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <p class="small muted">Até 1 chamada por motorista: 1x. Até 1,5: 1,2x. Até 2: 1,4x. Até 3: 1,6x. Acima: 1,8x (teto).</p></div>
+      <div class="card"><p class="eyebrow">Regras da tarifa</p>
+        <div class="fare">
+          <span>Bandeirada</span><span class="num">${brl(P.base)}</span>
+          <span>Por km</span><span class="num">${brl(P.km)}</span>
+          <span>Por minuto em movimento</span><span class="num">${brl(P.min)}</span>
+          <span>Espera e paradas (após 3 min grátis)</span><span class="num">${brl(P.waitMin)}/min</span>
+          <span>Acréscimo noturno (22h às 6h)</span><span class="num">+20%</span>
+          <span>Distância máxima por corrida</span><span class="num">${P.maxKm} km</span>
+          <span>Tarifa mínima</span><span class="num">${brl(P.minFare)}</span>
+          <span>Taxa da plataforma</span><span class="num">15%</span>
+        </div></div>
+    </div></div>`;
+}
+
+// ---------- SOS ----------
+function sosModal(){
+  if(S.sosPending) return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="sosT"><div class="card">
+    <h2 id="sosT">Acionar socorro?</h2><p class="muted">O alerta dispara automaticamente em</p><div class="count num">${S.sosPending.n}</div>
+    <div class="btns"><button class="btn ghost" data-act="sosCancel">Cancelar</button><button class="btn" style="background:var(--sos);color:#fff" data-act="sosNow">Acionar agora</button></div></div></div>`;
+  if(S.sos){ const who=S.sos.by==='pass'?S.pass:S.drv;
+    return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="sosA"><div class="card">
+    <p class="eyebrow" style="color:var(--sos)">Socorro acionado às ${S.sos.t}</p><h2 id="sosA">Ajuda a caminho</h2>
+    <ol class="steps"><li>Central de segurança Motora notificada com sua localização ao vivo.</li><li>${esc(who.data.emerName)} recebeu um alerta no ${esc(who.data.emerPhone)}.</li><li>Áudio da viagem sendo gravado e enviado à central.</li><li>${S.sos.by==='pass'?dm().A+' motorista não é avisad'+dm().a:'A passageira não é avisada'}, para sua segurança.</li></ol>
+    <div class="alert bad"><span>Em perigo imediato, ligue para a Polícia Militar</span><div class="row between"><span class="big num">190</span><button class="btn sm" style="background:var(--sos);color:#fff;width:auto" data-act="copy190">Copiar número</button></div><span class="small">Central de Atendimento à Mulher: <span class="num">180</span></span></div>
+    <p class="small muted">Protótipo: nenhum alerta real é enviado.</p>
+    <button class="btn ghost" data-act="sosEnd">Estou segura, encerrar alerta</button></div></div>`; }
+  return '';
+}
+let sosTimer=null;
+function startSos(by){ if(S.sos||S.sosPending) return; S.sosPending={by,n:5}; render();
+  sosTimer=setInterval(()=>{ if(!S.sosPending){clearInterval(sosTimer);return;} S.sosPending.n--; if(S.sosPending.n<=0) fireSos(); else render(); },1000); }
+function fireSos(){ const by=S.sosPending.by; clearInterval(sosTimer); S.sosPending=null;
+  const c=carPos(); S.sos={by,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+  log('sos',`SOS acionado ${by==='pass'?'pela passageira '+S.pass.data.name:dm().p+' motorista '+S.drv.data.name}${c?` em ${regionOf(c)} (${c.x.toFixed(2)} km, ${c.y.toFixed(2)} km)`:''}. Contato de emergência avisado.`);
+  if(rid()) sync('POST',`/api/corridas/${rid()}/sos`,{por:by==='pass'?'passageira':'motorista'},j=>{ if(S.sos) S.sos.link=j.link; });
+  if(S.ride) S.ride.checkPending=false; render(); }
+
+// ---------- ações ----------
+const A = {
+  view:d=>{S.view=d.v;render();scrollTo(0,0)},
+  edit:d=>{S.editing=d.who;render()},
+  pick:d=>{S.pick=d.v;render()},
+  map:(d,e)=>{ const svg=e.target.closest('svg'), b=svg.getBoundingClientRect();
+    const snap=v=>Math.max(0,Math.min(MAPKM,Math.round(v/2.5)*2.5));
+    const p={x:snap((e.clientX-b.left)/b.width*MAPKM), y:snap((e.clientY-b.top)/b.height*MAPKM)};
+    if(S.pick==='origin'){S.origin=p;S.pick='dest';} else S.dest=p; render(); },
+  request:()=>{ const e=estimate(S.origin,S.dest); if(e.km>P.maxKm||e.km===0) return;
+    const reg=S.regions[e.region]; reg.calls++;
+    S.ride={status:'searching',o:{...S.origin},d:{...S.dest},path:pathOf(S.origin,S.dest),km:e.km,min:e.min,region:e.region,surge:e.surge,night:e.night,f0:e.f,
+      waitSec:0,movingSec:0,done:0,approachDone:0,stopping:false,deviate:0,devTarget:0,devAlert:false,checkPending:false,pin:String(Math.floor(1000+Math.random()*9000)),declined:false,prefFem:S.pass.prefFem};
+    sync('POST','/api/corridas',{passageira_id:S.pass.id,origem:S.ride.o,destino:S.ride.d,prefere_motorista_mulher:S.pass.prefFem,hora:hourNow()},
+      j=>{ if(S.ride){ S.ride.id=j.id; S.ride.pin=j.pin; } });
+    S.shared=false; log('info',`Corrida pedida em ${e.region}: ${fmtKm(e.km)}, estimativa ${brl(e.f.total)}${e.surge>1?` (dinâmica ${String(e.surge).replace('.',',')}x)`:''}${e.night?', noturna':''}.`); render(); },
+  cancel:()=>{ if(rid()) sync('POST',`/api/corridas/${rid()}/cancelar`); S.regions[S.ride.region].calls=Math.max(0,S.regions[S.ride.region].calls-1); S.ride.status='cancel'; log('info','Corrida cancelada pela passageira.'); render(); },
+  decline:()=>{ S.ride.declined=true; log('info','Motorista recusou. Buscando outro(a).'); render(); setTimeout(()=>{ if(S.ride&&S.ride.status==='searching'){S.ride.declined=false;render();} },4000); },
+  accept:()=>{ const r=S.ride; if(rid()) sync('POST',`/api/corridas/${rid()}/aceitar`,{motorista_id:S.drv.id,posicao:S.drv.pos}); r.status='accepted'; r.approach=pathOf(S.drv.pos,r.o); log('info',`${S.drv.data.name} aceitou e está a ${fmtKm(pathLen(r.approach))} do embarque.`); render(); },
+  start:()=>{ const v=(document.getElementById('pinIn')||{}).value; const r=S.ride; if(v!==r.pin){r.pinErr=true;render();return;}
+    r.pinErr=false; r.status='ontrip'; log('info',`Embarque confirmado com código. Espera no embarque: ${mmss(r.waitSec)}.`);
+    // compartilhamento automático da rota com o contato de emergência da passageira
+    const c=S.pass.data; S.shared=true; r.autoShared=true;
+    log('info',`Rota compartilhada automaticamente com ${c.emerName} (${c.emerPhone}).`);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/iniciar`,{pin:v},j=>{ if(j.compartilhada_com) r.shareLink=j.compartilhada_com.link; });
+    render(); },
+  stop:()=>{ const r=S.ride; r.stopping=!r.stopping; if(rid()) sync('POST',`/api/corridas/${rid()}/parada`,{ativa:r.stopping}); log('info', r.stopping?'Parada iniciada. Cronômetro de espera ligado.':'Viagem retomada.'); render(); },
+  traffic:()=>{ const r=S.ride; r.traffic=true; if(rid()) sync('POST',`/api/corridas/${rid()}/transito`); log('desvio','Trânsito intenso detectado no trajeto da corrida.'); render(); },
+  altPropose:()=>{ const r=S.ride; r.proposal=proposeAlt(r);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa`,{rota:r.proposal.alt},j=>{ if(r.proposal&&j.proposta){ r.proposal.valor=j.proposta.valor; r.proposal.extraKm=j.proposta.km_extra; } }); log('info',`Motorista propôs rota alternativa: +${fmtKm(r.proposal.extraKm)}, adicional de ${brl(r.proposal.valor)}. Aguardando passageira.`); render(); },
+  altSeen:()=>{ const pr=S.ride.proposal; if(pr){ pr.seen=!pr.seen; render(); } },
+  altYes:()=>{ const r=S.ride, pr=r.proposal; if(!pr||!pr.seen) return;
+    if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa/resposta`,{aceita:true,viu_engarrafamento:true});
+    if(r.kmBase==null) r.kmBase=r.km;
+    r.path=[...pathUntil(r.path,r.done),...pr.alt.slice(1)]; r.km=pathLen(r.path);
+    r.extraKm=(r.extraKm||0)+pr.extraKm; r.extraMin=(r.extraMin||0)+pr.extraMin; r.prepaid=(r.prepaid||0)+pr.valor;
+    r.proposal=null; r.traffic=false; r.altUsed=true;
+    log('info',`Passageira confirmou visualmente o engarrafamento, autorizou a rota alternativa e pagou ${brl(pr.valor)} antecipadamente. Nova rota passa a ser monitorada.`); render(); },
+  altNo:()=>{ const r=S.ride; if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa/resposta`,{aceita:false}); r.proposal=null; r.altDeclined=true; log('info','Passageira recusou a rota alternativa. Rota original mantida.'); render(); },
+  deviate:()=>{ const r=S.ride; r.devTarget = r.devTarget>0?0:6; render(); },
+  imok:()=>{ S.ride.checkPending=false; log('info','Passageira confirmou que está tudo bem após o desvio.'); render(); },
+  share:()=>{ S.shared=true; const c=S.pass.data; log('info',`Viagem compartilhada com ${c.emerName}: link de acompanhamento ao vivo enviado (simulado).`); render(); },
+  rate:d=>{ S.ride[d.k]=+d.n; render(); },
+  newride:()=>{ S.ride=null; S.dest=null; S.shared=false; render(); },
+  prefFem:()=>{ S.pass.prefFem=!S.pass.prefFem; render(); },
+  online:()=>{ S.drv.online=!S.drv.online; const reg=S.regions[regionOf(S.drv.pos)]; reg.drivers=Math.max(0,reg.drivers+(S.drv.online?1:-1)); render(); },
+  reg:d=>{ const x=S.regions[d.n]; x[d.k]=Math.max(0,x[d.k]+ +d.d); sync('PUT',`/api/regioes/${encodeURIComponent(d.n)}`,{chamadas:x.calls,motoristas:x.drivers}); render(); },
+  sos:d=>startSos(d.by),
+  sosCancel:()=>{ S.sosPending=null; clearInterval(sosTimer); render(); },
+  sosNow:()=>fireSos(),
+  sosEnd:()=>{ if(rid()) sync('POST',`/api/corridas/${rid()}/sos/encerrar`); log('info','Alerta de socorro encerrado: usuária confirmou que está segura.'); S.sos=null; render(); },
+  copyLink:(d,e)=>{ const b=e.target, t=S.ride&&S.ride.shareLink; if(!t) return; try{ navigator.clipboard.writeText(t).then(()=>{b.textContent='Link copiado';},()=>{}); }catch(_){} },
+  copy190:(d,e)=>{ const b=e.target; try{ navigator.clipboard.writeText('190').then(()=>{b.textContent='Copiado';},()=>{b.textContent='Disque 190';}); }catch(_){ b.textContent='Disque 190'; } },
+};
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-act]'); if(!t) return; const f=A[t.dataset.act]; if(f){ e.preventDefault(); f(t.dataset,e); } });
+document.addEventListener('submit',e=>{ if(e.target.matches('form.reg')){ e.preventDefault(); submitReg(e.target); } });
+document.addEventListener('change',e=>{
+  if(e.target.id==='hourSel'){ render(); return; }
+  const who=e.target.dataset.photo; if(who && e.target.files[0]){ const fr=new FileReader();
+    const form=e.target.closest('form'); fr.onload=()=>{ S[who].photo=fr.result; // guarda o que já foi digitado
+      const fd=new FormData(form); for(const k of Object.keys(S[who].data)) if(fd.has(k)) S[who].data[k]=fd.get(k); render(); };
+    fr.readAsDataURL(e.target.files[0]); }
+});
+
+// ---------- simulação ----------
+function tick(){
+  const r=S.ride; if(!r) return;
+  const dt=TICK/1000*SIM, base=SPEED/3600*dt;
+  // corridas longas andam mais rápido na tela (~20 s), mas o tempo cobrado segue a velocidade real
+  const stepFor=len=>Math.max(base,len/90);
+  if(r.status==='accepted'){ r.approachDone+=stepFor(pathLen(r.approach)); if(r.approachDone>=pathLen(r.approach)){ r.status='arrived'; if(rid()) sync('POST',`/api/corridas/${rid()}/chegada`); log('info',`Motorista chegou ao embarque.`+' Contagem de espera iniciada.'); } }
+  else if(r.status==='arrived'){ r.waitSec+=dt; }
+  else if(r.status==='ontrip'){
+    if(r.stopping) r.waitSec+=dt; else { const slow=r.traffic?3:1, st=stepFor(r.km)/slow; r.done+=st; r.movingSec+=st/SPEED*3600*slow; }
+    r.deviate += Math.sign(r.devTarget-r.deviate)*Math.min(0.15,Math.abs(r.devTarget-r.deviate));
+    if(r.deviate>DEV_KM && !r.devAlert){ r.devAlert=true; r.checkPending=true; log('desvio',`Desvio de rota detectado (${fmtKm(r.deviate)} fora do trajeto). Passageira consultada.`); }
+    if(r.deviate<0.1 && r.devAlert && r.devTarget===0){ r.devAlert=false; log('info','Veículo de volta ao trajeto previsto.'); }
+    if(r.done>=r.km && r.deviate<0.1){ r.done=r.km; r.status='done'; r.stopping=false;
+      r.final=liveFare(r); S.drv.earnings+=r.final.total*(1-P.fee); S.drv.trips++; S.drv.pos={...r.d};
+      S.regions[r.region].calls=Math.max(0,S.regions[r.region].calls-1);
+      log('info',`Corrida concluída: ${brl(r.final.total)} (espera ${mmss(r.waitSec)}).`);
+      if(rid()) sync('POST',`/api/corridas/${rid()}/finalizar`,null,j=>{ if(j.tarifa_final) r.final=j.tarifa_final; }); }
+    else if(rid() && (r.posTick=(r.posTick||0)+1)%5===0){ const c=carPos(); sync('POST',`/api/corridas/${rid()}/posicao`,{x:c.x,y:c.y}); }
+  } else return;
+  if(document.querySelector('form.reg') || document.activeElement?.id==='pinIn') { if(!document.querySelector('form.reg')) refreshKeepingPin(); return; }
+  render();
+}
+function refreshKeepingPin(){ const v=document.getElementById('pinIn').value; render(); const el=document.getElementById('pinIn'); if(el){el.value=v;el.focus();} }
+setInterval(tick,TICK);
+
+// ---------- render ----------
+function render(){
+  const pinVal=document.getElementById('pinIn')?.value;
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.view));
+  document.getElementById('modeInfo').textContent = API.on ? 'Conectado ao servidor Motora: cadastros, corridas e alertas são gravados.' : 'Protótipo: mapa, GPS e servidor simulados neste aparelho.';
+  const n=isNight(hourNow()); document.getElementById('nightChip').innerHTML=`<span class="chip ${n?'night':''}">${n?'Tarifa noturna ativa':'Tarifa diurna'}</span>`;
+  document.getElementById('app').innerHTML = S.view==='central' ? centralView() : `<div class="phone">${S.view==='pass'?passView():drvView()}</div>`;
+  const pin=document.getElementById('pinIn'); if(pin && pinVal) pin.value=pinVal;
+  const showFab = S.view!=='central' && S[S.view].reg && !S.editing;
+  document.getElementById('fab').innerHTML = showFab?`<button class="sos-fab" data-act="sos" data-by="${S.view}" aria-label="Botão de socorro">SOS</button>`:'';
+  document.getElementById('modal').innerHTML = sosModal();
+}
+render();
+</script>
+
+</body>
+</html>
