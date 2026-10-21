@@ -1,0 +1,1793 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Motora</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de celular centralizado, abas fixas no topo (Passageira / Motorista / Central), botão SOS flutuante */
+:root{
+  --bg:#F6F1F4; --surface:#FFFFFF; --ink:#24161F; --muted:#6F5E69; --line:#E7DCE3;
+  --accent:#A8235A; --accent-ink:#FFFFFF; --accent-soft:#F7DFEA;
+  --map:#EEE6EB; --street:#FFFFFF; --sos:#D42A2A; --sos-soft:#FCE3E3;
+  --ok:#1D7A4C; --ok-soft:#DDF2E7; --warn:#9A5C00; --warn-soft:#FBEBCF;
+  --z1:#F3E3EA; --z2:#E9E6F2; --z3:#E5EEE9; --z4:#F2EBDD; --z0:#F0D9E3;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#150F16; --surface:#211923; --ink:#F4EAF0; --muted:#B5A2AE; --line:#3A2D3B;
+  --accent:#E5679A; --accent-ink:#1B0E15; --accent-soft:#3D1F2E;
+  --map:#261D29; --street:#3A2E3D; --sos:#FF5C5C; --sos-soft:#3E1C1C;
+  --ok:#55C893; --ok-soft:#173326; --warn:#EDAA45; --warn-soft:#3A2A12;
+  --z1:#33202B; --z2:#262438; --z3:#1F2F28; --z4:#332B1D; --z0:#3D2533; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#150F16; --surface:#211923; --ink:#F4EAF0; --muted:#B5A2AE; --line:#3A2D3B;
+  --accent:#E5679A; --accent-ink:#1B0E15; --accent-soft:#3D1F2E;
+  --map:#261D29; --street:#3A2E3D; --sos:#FF5C5C; --sos-soft:#3E1C1C;
+  --ok:#55C893; --ok-soft:#173326; --warn:#EDAA45; --warn-soft:#3A2A12;
+  --z1:#33202B; --z2:#262438; --z3:#1F2F28; --z4:#332B1D; --z0:#3D2533; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.08rem;font-weight:600}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:980px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand h1{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.brand small{color:var(--muted);font-size:.8rem}
+.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:999px}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.simbar{max-width:980px;margin:0 auto;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--muted);font-size:.85rem}
+.simbar select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+main{max-width:980px;margin:0 auto;padding-block:8px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.phone{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.btn{border:0;border-radius:14px;padding:13px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink);width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.soft{background:var(--accent-soft);color:var(--ink)}
+textarea{font:inherit;width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);color:var(--ink)}
+a.btn{text-decoration:none;text-align:center;box-sizing:border-box;display:block}
+.btn.wa{background:#1F8A4C;color:#fff}
+.btn.ok{background:var(--ok);color:var(--surface)}
+.btn.sm{padding:8px 12px;border-radius:10px;width:auto;font-size:.88rem}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.chip.hot{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.night{background:var(--z2);color:var(--ink);border-color:transparent}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.bad{background:var(--sos-soft);color:var(--sos);border-color:transparent}
+.av{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--accent-soft)}
+.av.lg{width:84px;height:84px}
+.person{display:flex;gap:12px;align-items:center;min-width:0}
+.person > div{min-width:0}
+.mapbox{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--map);position:relative}
+.mapbox svg{display:block;width:100%;height:auto}
+.mapbox.click svg{cursor:crosshair}
+.maphint{display:block;background:var(--surface);color:var(--muted);font-size:.8rem;padding:7px 10px;border-top:1px solid var(--line)}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px;font-weight:600;font-size:.88rem}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.fare{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:.92rem}
+.fare .tot{font-weight:800;font-size:1.15rem;border-top:1px solid var(--line);padding-top:7px}
+.fare .tot.v{font-family:var(--display)}
+.big{font-family:var(--display);font-size:2rem;font-weight:800;line-height:1}
+.alert{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-weight:600}
+.alert.warn{background:var(--warn-soft);color:var(--warn)}
+.alert.bad{background:var(--sos-soft);color:var(--sos)}
+.alert.ok{background:var(--ok-soft);color:var(--ok)}
+.alert.info{background:var(--accent-soft);color:var(--ink)}
+.pin{font-family:var(--mono);font-size:1.6rem;letter-spacing:.3em;background:var(--bg);border-radius:10px;padding:6px 12px;display:inline-block}
+form.reg{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.82rem;font-weight:600;color:var(--muted)}
+.field input,.field select{font:inherit;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem}
+.check input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.err{color:var(--sos);font-size:.85rem;font-weight:600}
+.photo-pick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photo-pick input[type=file]{font-size:.82rem;max-width:100%}
+.stars{display:flex;gap:6px}
+.stars button{border:0;background:transparent;font-size:1.8rem;color:var(--line);padding:0 2px;line-height:1}
+.stars button.on{color:var(--warn)}
+.sos-fab{position:fixed;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:8;width:74px;height:74px;border-radius:50%;border:4px solid var(--surface);background:var(--sos);color:#fff;font-family:var(--display);font-weight:800;font-size:1.2rem;box-shadow:0 8px 24px rgba(180,20,20,.35)}
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(20,8,14,.62);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.overlay .card{max-width:420px;width:100%;max-height:100%;overflow:auto}
+.tips{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.btn.apoio{background:var(--warn-soft);color:var(--warn)}
+.count{font-family:var(--display);font-size:4rem;font-weight:800;color:var(--sos);text-align:center;line-height:1}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.central{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.central{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td .pm{display:inline-flex;gap:4px;align-items:center}
+td .pm button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700}
+.log{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto}
+.log div{display:flex;gap:10px;font-size:.88rem;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.log div.sos{background:var(--sos-soft);color:var(--sos);font-weight:600}
+.log div.desvio{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.log time{font-family:var(--mono);font-size:.78rem;opacity:.8;flex:none;padding-top:1px}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:700}
+.switch{width:52px;height:30px;border-radius:999px;border:0;background:var(--line);position:relative;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:left .2s}
+.switch[aria-checked="true"]{background:var(--ok)}
+.switch[aria-checked="true"]::after{left:25px}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}.switch::after{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><h1>Motora</h1><small>corridas para passageiras mulheres</small></div>
+    <nav class="tabs" aria-label="Perfil">
+      <button data-act="view" data-v="pass">Passageira</button>
+      <button data-act="view" data-v="drv">Motorista</button>
+      <button data-act="view" data-v="central">Central</button>
+    </nav>
+  </div>
+</header>
+<div class="simbar">
+  <label for="hourSel">Horário da simulação</label>
+  <select id="hourSel">
+    <option value="auto">Agora (relógio real)</option>
+    <option value="9">09h (diurno)</option>
+    <option value="18">18h (diurno)</option>
+    <option value="23">23h (noturno)</option>
+    <option value="3">03h (noturno)</option>
+  </select>
+  <span id="nightChip"></span>
+  <span id="netSim"></span>
+  <span id="modeInfo"></span>
+</div>
+<main id="app"></main>
+<div id="fab"></div>
+<div id="modal"></div>
+<div id="payModal"></div>
+
+<script>
+// ---------- regras de preço ----------
+const P = {desloc:3, base:4.00, km:2.20, min:0.40, freeWait:120, stopFree:60, waitMin:0.60, night:0.20, nightFrom:22, nightTo:6, minFare:8.00, maxKm:100, fee:0.15, loyal:0.05 };
+const SIM = 20, TICK = 200, SPEED = 40; // espera: 1 s real = 20 s simulados; 40 km/h média cidade + rodovia
+const MAPKM = 240, DEV_KM = 1, JAM_KM = 15; // lado do mapa, desvio que gera alerta e trecho engarrafado simulado, em km
+// frota sustentável: modelos aceitos no cadastro. Elétricos com autonomia aproximada em km; híbridos com o tipo
+const EVS = {'BYD Dolphin':400,'BYD Dolphin Mini':280,'BYD Seal':500,'BYD Yuan Plus':420,'Renault Kwid E-Tech':250,'Renault Megane E-Tech':450,'Chevrolet Bolt EUV':390,'Chevrolet Spark EUV':350,'GWM Ora 03':400,'Volvo EX30':330,'Peugeot e-2008':320,'Fiat 500e':230,'JAC E-JS1':280,'Nissan Leaf':270};
+const HYB = {'Toyota Corolla Hybrid':'híbrido flex','Toyota Corolla Cross Hybrid':'híbrido flex','Toyota Yaris Cross Hybrid':'híbrido flex','Honda Civic e:HEV':'híbrido','BYD King':'híbrido plug-in','BYD Song Pro':'híbrido plug-in','BYD Song Plus':'híbrido plug-in','GWM Haval H6':'híbrido plug-in','Caoa Chery Tiggo 7 Hybrid':'híbrido','Kia Niro Hybrid':'híbrido'};
+const carKind = m => EVS[m] ? `elétrico, ${EVS[m]} km de autonomia` : HYB[m] || '?';
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtKm = v => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' km';
+const mmss = s => { s=Math.max(0,Math.round(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function hourNow(){ const v=document.getElementById('hourSel').value; return v==='auto'? new Date().getHours() : +v; }
+const isNight = h => h>=P.nightFrom || h<P.nightTo;
+
+// (até N chamadas por motorista, fator); acima disso vale o teto
+const SURGE=[[1,1],[1.5,1.2],[2,1.4],[3,1.6],[4,1.8],[5,2.0],[6,2.2]], SURGE_MAX=2.4;
+// compras no porta-malas: a partir de N sacolas/caixas -> acréscimo (bagagem de mão não conta)
+const BAG=[[9,0.10],[7,0.07],[5,0.05],[3,0.03]], BAG_MAX=20;
+const bagPct = n => (BAG.find(([min])=>n>=min)||[0,0])[1];
+function surgeOf(name){
+  const r=S.regions[name]; const ratio=r.calls/Math.max(1,r.drivers);
+  return (SURGE.find(([lim])=>ratio<=lim)||[0,SURGE_MAX])[1];
+}
+function regionOf(p){
+  if(p.x>=80&&p.x<=160&&p.y>=80&&p.y<=160) return 'Centro';
+  return p.y<120 ? (p.x<120?'Região Norte':'Região Leste') : (p.x<120?'Região Oeste':'Região Sul');
+}
+function fare({km,min,waitSec,night,surge,fiel=false,stopCharge=0,vol=0}){
+  const corrida = P.base + km*P.km + min*P.min;
+  const dinamica = corrida*(surge-1);
+  const bagagem = (corrida+dinamica)*bagPct(vol);
+  // espera no embarque: 2 min grátis; paradas: 1 min grátis em cada (stopCharge já vem descontado)
+  const esperaEmb = Math.max(0,waitSec-P.freeWait)/60*P.waitMin, esperaPar = stopCharge/60*P.waitMin;
+  const esperaMin = (Math.max(0,waitSec-P.freeWait)+stopCharge)/60;
+  const espera = esperaEmb+esperaPar;
+  // Motora Fiel: 5% sobre km e tempo (com a dinâmica deles); bandeirada e espera ficam de fora
+  const desc0 = fiel ? (km*P.km + min*P.min)*surge*P.loyal : 0;
+  const fechar = sub => { const n = night ? sub*P.night : 0; return {n, t:Math.max(P.minFare,sub+n), m:sub+n<P.minFare}; };
+  const cheio = fechar(corrida+dinamica+bagagem+espera).t, x = fechar(corrida+dinamica+bagagem+espera-desc0);
+  // taxa fixa de deslocamento: somada ao total, 100% para quem dirige (fora dos 85/15)
+  return {corrida,dinamica,bagagem,espera,esperaEmb,esperaPar,esperaMin,noturno:x.n,deslocamento:P.desloc,total:x.t+P.desloc,minimo:x.m,desconto:cheio-x.t,cheio:cheio+P.desloc};
+}
+// quem dirige recebe 85% do valor sem desconto, mais a taxa de deslocamento inteira; o desconto sai da parte da Motora
+const driverShare = f => ((f.cheio ?? f.total)-(f.deslocamento||0))*(1-P.fee)+(f.deslocamento||0);
+function fareRows(f, r){
+  return `<div class="fare">
+    <span>Corrida (${fmtKm(r.kmBase??r.km)} · ${Math.round(r.min)} min)</span><span class="num">${brl(f.corrida)}</span>
+    ${f.dinamica>0?`<span>Alta demanda ${esc(r.region)} (${String(r.surge).replace('.',',')}x)</span><span class="num">${brl(f.dinamica)}</span>`:''}
+    ${f.bagagem>0.004?`<span>Compras no porta-malas (${r.vol} volumes, +${Math.round(bagPct(r.vol)*100)}%)</span><span class="num">${brl(f.bagagem)}</span>`:''}
+    <span>Espera no embarque (${mmss(r.waitSec)}, 2 min grátis)</span><span class="num">${brl(f.esperaEmb??f.espera)}</span>
+    ${(r.stopSec||r.stopCur)?`<span>Paradas (${mmss((r.stopSec||0)+(r.stopCur||0))}, 1 min grátis em cada)</span><span class="num">${brl(f.esperaPar||0)}</span>`:''}
+    ${r.night?`<span>Acréscimo noturno (+20%)</span><span class="num">${brl(f.noturno)}</span>`:''}
+    ${f.desconto>0.004?`<span style="color:var(--ok)">Desconto Motora Fiel (5%, sem bandeirada)</span><span class="num" style="color:var(--ok)">−${brl(f.desconto)}</span>`:''}
+    ${f.minimo?`<span class="muted small">Tarifa mínima aplicada</span><span></span>`:''}
+    ${f.deslocamento?`<span>Taxa de deslocamento (fixa, 100% para ${dm().a} motorista)</span><span class="num">${brl(f.deslocamento)}</span>`:''}
+    ${f.adicional>0?`<span>Rota alternativa (+${fmtKm(r.extraKm)}, paga antecipadamente)</span><span class="num">${brl(f.adicional)}</span>`:''}
+    <span class="tot">Total</span><span class="tot v num">${brl(f.total)}</span>
+  </div>`;
+}
+
+// ---------- estado ----------
+const exPass = {name:'Juliana Ferreira',cpf:'123.456.789-09',birth:'1994-05-12',phone:'(11) 98765-4321',email:'juliana@exemplo.com',emerName:'Marta Ferreira (mãe)',emerPhone:'(11) 91234-5678'};
+const isoIn = d => new Date(Date.now()+d*864e5).toISOString().slice(0,10);
+const exDrv = {cnhVal:isoIn(900),crlvVal:isoIn(20),btTipo:'multimidia',btNome:'BYD Dolphin',name:'Rosana Lima',cpf:'987.654.321-00',birth:'1986-09-03',phone:'(11) 99876-1122',email:'rosana@exemplo.com',emerName:'Paula Lima (irmã)',emerPhone:'(11) 93456-7788',sex:'F',cnh:'04512378901',car:'BYD Dolphin',color:'Branco',year:'2021',plate:'RTA-4F21'};
+const S = {
+  view:'pass',
+  pass:{reg:false, data:{...exPass}, photo:null, rating:4.9, err:'', prefFem:false, card:null, loyal:false},
+  drv:{reg:false, data:{...exDrv}, photo:null, rating:4.95, err:'', online:true, pos:{x:115,y:130}, earnings:0, trips:0, payOk:false, payUrl:null},
+  editing:null, pick:'dest', origin:{x:100,y:140}, dest:{x:150,y:110},
+  regions:{'Centro':{calls:18,drivers:9},'Região Norte':{calls:6,drivers:7},'Região Leste':{calls:22,drivers:8},'Região Oeste':{calls:9,drivers:5},'Região Sul':{calls:5,drivers:6}},
+  ride:null, log:[], sos:null, sosPending:null, shared:false
+};
+function log(type,text){ S.log.unshift({t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),type,text}); }
+
+function avatarSvg(name, hue){
+  const ini=name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="hsl(${hue},55%,62%)"/><circle cx="40" cy="32" r="14" fill="hsl(${hue},45%,85%)"/><path d="M14 76c4-16 16-22 26-22s22 6 26 22z" fill="hsl(${hue},45%,85%)"/><text x="40" y="38" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="hsl(${hue},55%,30%)">${ini}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+// artigo e sufixo conforme o sexo informado no cadastro do(a) motorista
+const dm = () => S.drv.data.sex==='M' ? {a:'o',A:'O',d:'do',p:'pelo',s:''} : {a:'a',A:'A',d:'da',p:'pela',s:'a'};
+const photoOf = who => S[who].photo || avatarSvg(S[who].data.name||'?', who==='pass'?330:285);
+
+// ---------- geometria ----------
+const pathOf = (a,b) => [a,{x:b.x,y:a.y},b];
+const dist = (a,b) => Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+function pathLen(p){ let s=0; for(let i=1;i<p.length;i++) s+=dist(p[i-1],p[i]); return s; }
+function pointAt(p,d){
+  for(let i=1;i<p.length;i++){ const L=dist(p[i-1],p[i]);
+    if(d<=L||i===p.length-1){ const f=L?Math.min(1,d/L):1; return {x:p[i-1].x+(p[i].x-p[i-1].x)*f, y:p[i-1].y+(p[i].y-p[i-1].y)*f, horiz:p[i-1].y===p[i].y}; }
+    d-=L; }
+  return p[p.length-1];
+}
+function estimate(o,d){
+  const br=bestRoute(o,d), km=br.km, min=br.min, region=regionOf(o), surge=surgeOf(region), night=isNight(hourNow());
+  const vol=S.pass.vol||0;
+  return {km,min,br,region,surge,night,vol,waitSec:0,f:fare({km,min,waitSec:0,night,surge,fiel:S.pass.loyal,vol})};
+}
+function carPos(){
+  const r=S.ride; if(!r) return null;
+  if(r.status==='accepted') return pointAt(r.approach,r.approachDone);
+  if(r.status==='arrived') return r.o;
+  if(r.status==='ontrip'||r.status==='done'){ const p=pointAt(r.path,r.done); return p.horiz?{x:p.x,y:p.y+r.deviate}:{x:p.x+r.deviate,y:p.y}; }
+  return null;
+}
+
+// ---------- ocorrências de trânsito e melhor rota ----------
+const OC_TIPO = {acidente:{n:'Acidente',min:15,h:2,ic:'💥'},obra:{n:'Obra',min:10,h:168,ic:'🚧'},engarrafamento:{n:'Engarrafamento',min:20,h:1,ic:'🚦'},policiamento:{n:'Policiamento',min:0,h:2,ic:'👮'},blitz:{n:'Blitz',min:0,h:3,ic:'🚨'}};
+const OC_RAIO = 1, OC_DESVIO = 6;
+S.ocorr = [ // exemplos do protótipo; com o servidor, a lista vem dele
+  {id:'oc-ex1',tipo:'obra',x:60,y:200,por:'Central',obs:'Recapeamento',exp:Infinity,ex:true},
+  {id:'oc-ex2',tipo:'policiamento',x:200,y:60,por:'Central',obs:null,exp:Infinity,ex:true}];
+const ocAtivas = () => S.ocorr.filter(o=>o.exp>S.simT);
+function segDist(p,a,b){ const dx=b.x-a.x, dy=b.y-a.y, L=dx*dx+dy*dy, t=L?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/L)):0; return Math.hypot(p.x-(a.x+t*dx), p.y-(a.y+t*dy)); }
+const nearPath = (p,path) => { let m=Infinity; for(let i=1;i<path.length;i++) m=Math.min(m,segDist(p,path[i-1],path[i])); return m; };
+function candRoutes(a,b){
+  a={x:a.x,y:a.y}; b={x:b.x,y:b.y}; const cl=v=>Math.max(0,Math.min(MAPKM,v));
+  const lo=Math.min(a.y,b.y), hi=Math.max(a.y,b.y), lx=Math.min(a.x,b.x), hx=Math.max(a.x,b.x);
+  return [[a,{x:b.x,y:a.y},b],[a,{x:a.x,y:b.y},b],
+    ...[(lo+hi)/2,lo-OC_DESVIO,hi+OC_DESVIO].map(y=>[a,{x:a.x,y:cl(y)},{x:b.x,y:cl(y)},b]),
+    ...[(lx+hx)/2,lx-OC_DESVIO,hx+OC_DESVIO].map(x=>[a,{x:cl(x),y:a.y},{x:cl(x),y:b.y},b])];
+}
+// a mesma regra do servidor: menor tempo estimado; no empate, a mais curta e depois a rota padrão
+function bestRoute(a,b){
+  const oc=ocAtivas(); let best=null, padrao=null;
+  for(const path of candRoutes(a,b)){
+    const km=Math.round(pathLen(path)*100)/100, perto=oc.filter(o=>nearPath(o,path)<=OC_RAIO), atraso=perto.reduce((s,o)=>s+OC_TIPO[o.tipo].min,0);
+    const it={path,km,min:km/SPEED*60+atraso,atraso,perto}; padrao=padrao||it;
+    if(!best || Math.round(it.min*100)<Math.round(best.min*100) || (Math.round(it.min*100)===Math.round(best.min*100) && km<best.km)) best=it; }
+  const evit=padrao.perto.filter(o=>!best.perto.includes(o));
+  const obs=best.perto.map(o=>`${OC_TIPO[o.tipo].n} no trajeto${OC_TIPO[o.tipo].min?` (+${OC_TIPO[o.tipo].min} min)`:''}`);
+  if(evit.length) obs.unshift(`Rota desviada para evitar: ${evit.map(o=>OC_TIPO[o.tipo].n.toLowerCase()).join(', ')} (${best.km-padrao.km<0.05?'mesma distância':'+'+fmtKm(best.km-padrao.km)}, ${Math.round(padrao.min-best.min)} min a menos)`);
+  return {...best,obs,evit};
+}
+function loadOcorr(){ if(API.on) api('GET','/api/ocorrencias').then(j=>{ S.ocorr=j.ocorrencias.map(o=>({id:o.id,sid:o.id,tipo:o.tipo,x:o.x,y:o.y,por:o.por_nome,obs:o.obs,exp:Infinity})); render(); }).catch(()=>{}); }
+function ocorrSvg(){
+  return ocAtivas().map(o=>`<g transform="translate(${o.x*K},${o.y*K})" aria-label="${OC_TIPO[o.tipo].n}"><rect x="-9" y="-9" width="18" height="18" rx="5" fill="var(--surface)" stroke="var(--warn)" stroke-width="2"/><text y="4.5" font-size="11" text-anchor="middle">${OC_TIPO[o.tipo].ic}</text></g>`).join('');
+}
+const routeObsBox = obs => obs&&obs.length ? `<div class="alert warn small"><span>${obs.map(esc).join('<br>')}</span></div>` : '';
+// ---------- mapa ----------
+const K=300/MAPKM;
+function mapSvg({clickable=false, limit=false, idle=false, stale=false, act='map', postos=false}={}){
+  const r=S.ride, o=r?r.o:S.origin, d=r?r.d:S.dest;
+  let s=`<svg viewBox="0 0 300 300" role="img" aria-label="Mapa simulado da cidade" ${clickable?`data-act="${act}"`:''}>`;
+  s+=`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--warn)" fill-opacity=".12"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--warn)" stroke-width="2" stroke-opacity=".55"/></pattern></defs>`;
+  s+=`<rect width="300" height="300" fill="var(--map)"/>`;
+  s+=`<rect x="0" y="0" width="150" height="150" fill="var(--z1)"/><rect x="150" y="0" width="150" height="150" fill="var(--z2)"/><rect x="0" y="150" width="150" height="150" fill="var(--z3)"/><rect x="150" y="150" width="150" height="150" fill="var(--z4)"/><rect x="100" y="100" width="100" height="100" fill="var(--z0)"/>`;
+  for(let i=0;i<=12;i++){ const w=i%4===0?5:2.5; s+=`<line x1="${i*25}" y1="0" x2="${i*25}" y2="300" stroke="var(--street)" stroke-width="${w}"/><line x1="0" y1="${i*25}" x2="300" y2="${i*25}" stroke="var(--street)" stroke-width="${w}"/>`; }
+  const lab=(x,y,t,a='start')=>`<text x="${x}" y="${y}" text-anchor="${a}" font-size="9" font-weight="700" fill="var(--muted)" font-family="Figtree,sans-serif" letter-spacing=".08em">${t.toUpperCase()}</text>`;
+  s+=lab(8,16,'Região Norte')+lab(292,16,'Região Leste','end')+lab(8,292,'Região Oeste')+lab(292,292,'Região Sul','end')+lab(130,114,'Centro');
+  s+=zonesSvg(); s+=ocorrSvg(); if(S.view==='drv') s+=areaSvg();
+  if(postos) s+=postosSvg();
+  if(limit && o){ const pts=[[o.x+P.maxKm,o.y],[o.x,o.y+P.maxKm],[o.x-P.maxKm,o.y],[o.x,o.y-P.maxKm]].map(([x,y])=>`${x*K},${y*K}`).join(' ');
+    s+=`<polygon points="${pts}" fill="var(--accent)" fill-opacity=".06" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>`; }
+  if(r && r.status==='accepted'){ s+=`<polyline points="${r.approach.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--muted)" stroke-width="3" stroke-dasharray="4 4"/>`; }
+  const route = r&&r.path ? r.path : (o&&d?bestRoute(o,d).path:null);
+  if(route){ s+=`<polyline points="${route.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`; }
+  if(r && r.traffic){ const a=r.done, seg=[pointAt(r.path,a)]; for(let k=1;k<=10;k++) seg.push(pointAt(r.path,Math.min(r.km,a+k*JAM_KM/10)));
+    s+=`<polyline points="${seg.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--sos)" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 3"/>`; }
+  if(r && r.proposal){ s+=`<polyline points="${r.proposal.alt.map(p=>p.x*K+','+p.y*K).join(' ')}" fill="none" stroke="var(--warn)" stroke-width="4" stroke-dasharray="6 4" stroke-linejoin="round"/>`; }
+  if(o){ s+=`<circle cx="${o.x*K}" cy="${o.y*K}" r="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/><text x="${o.x*K}" y="${o.y*K+3.5}" font-size="10" text-anchor="middle" font-weight="800" fill="var(--accent)" font-family="Figtree,sans-serif">A</text>`; }
+  if(d){ s+=`<path d="M${d.x*K} ${d.y*K} l-8 -14 a9 9 0 1 1 16 0 z" fill="var(--accent)"/><text x="${d.x*K}" y="${d.y*K-15}" font-size="9" text-anchor="middle" font-weight="800" fill="var(--accent-ink)" font-family="Figtree,sans-serif">B</text>`; }
+  const useSeen = stale && r && r.seen && weak('drv');
+  const c = (useSeen ? r.seen.pos : carPos()) || (idle? S.drv.pos : null);
+  if(c){ const off = r && r.deviate>DEV_KM; s+=`<g transform="translate(${c.x*K},${c.y*K})"><circle r="13" fill="${off?'var(--warn)':'var(--ink)'}" fill-opacity=".18"/><rect x="-8" y="-6" width="16" height="12" rx="4" fill="${off?'var(--warn)':'var(--ink)'}" ${useSeen?'fill-opacity=".45" stroke="var(--warn)" stroke-width="2" stroke-dasharray="3 2"':''}/><rect x="-5" y="-4" width="10" height="4" rx="1.5" fill="var(--surface)"/></g>`; }
+  s+=`<text x="292" y="${limit?280:0}" font-size="0"></text></svg>`;
+  return s;
+}
+
+// ---------- telas: cadastro ----------
+function regForm(who){
+  const u=S[who], d=u.data, drv=who==='drv';
+  const f=(id,label,val,type='text',extra='')=>`<div class="field"><label for="${who}-${id}">${label}</label><input id="${who}-${id}" name="${id}" type="${type}" value="${esc(val)}" ${extra}></div>`;
+  return `<div class="card">
+    <div><p class="eyebrow">${drv?'Cadastro de motorista':'Cadastro de passageira'}</p><h2>${drv?'Dirija com a Motora':'Viaje com segurança'}</h2></div>
+    <p class="muted small">Campos preenchidos com dados de exemplo. ${drv?'Motoristas podem ser homens ou mulheres. Todos passam por verificação facial, de documento e de antecedentes criminais.':'Passageiras são apenas mulheres (cis e trans), com verificação facial e de documento.'}</p>
+    <form class="reg" data-who="${who}" novalidate>
+      <div class="photo-pick">
+        <img class="av lg" src="${photoOf(who)}" alt="Foto de perfil">
+        <div class="field"><label for="${who}-photo">Foto de rosto (selfie) *</label><input id="${who}-photo" type="file" accept="image/*" data-photo="${who}">
+        <span class="small muted">${u.photo?'Foto carregada.':'Sem foto, usamos um avatar de exemplo.'}</span></div>
+      </div>
+      ${f('name','Nome completo *',d.name)}
+      <div class="grid2">${f('cpf','CPF *',d.cpf,'text','inputmode="numeric"')}${f('birth','Nascimento *',d.birth,'date')}</div>
+      <div class="grid2">${f('phone','Celular *',d.phone,'tel')}${f('email','E-mail *',d.email,'email')}</div>
+      <div class="grid2">${f('emerName','Contato de emergência *',d.emerName)}${f('emerPhone','Telefone do contato *',d.emerPhone,'tel')}</div>
+      ${drv?`<div class="field"><label for="drv-sex">Sexo *</label><select id="drv-sex" name="sex"><option value="F" ${d.sex!=='M'?'selected':''}>Feminino</option><option value="M" ${d.sex==='M'?'selected':''}>Masculino</option></select></div>
+      <p class="eyebrow">Veículo e habilitação</p>
+      <div class="alert ok small"><span>A frota Motora é elétrica ou híbrida. Carros movidos só a combustão não são aceitos.</span></div>
+      <div class="grid2">${f('cnh','Nº da CNH (com EAR) *',d.cnh,'text','inputmode="numeric"')}${f('cnhVal','Validade da CNH *',d.cnhVal,'date')}</div>
+      <div class="grid2">${f('plate','Placa *',d.plate)}${f('crlvVal','Validade do CRLV (licenciamento) *',d.crlvVal,'date')}</div>
+      <p class="small muted">Avisamos 30 dias antes do vencimento. Com CNH ou CRLV vencido, você não recebe corridas até enviar o documento novo.</p>
+      <p class="eyebrow">Item de segurança: Bluetooth do veículo</p>
+      <p class="small muted">O celular fica conectado ao Bluetooth do carro. Se desconectar ou se afastar, perguntamos se está tudo bem e, sem resposta, avisamos a central.</p>
+      <div class="grid2"><div class="field"><label for="drv-btTipo">O Bluetooth é do veículo? *</label><select id="drv-btTipo" name="btTipo">${Object.entries(BT_TIPOS).map(([k,l])=>`<option value="${k}" ${d.btTipo===k?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${f('btNome','Nome do Bluetooth (como aparece no celular)',d.btNome,'text','maxlength="60" placeholder="Ex.: BYD Dolphin"')}</div>
+      <div class="grid2"><div class="field"><label for="drv-car">Modelo elétrico ou híbrido *</label><select id="drv-car" name="car"><optgroup label="Elétricos">${Object.keys(EVS).map(m=>`<option ${m===d.car?'selected':''}>${m}</option>`).join('')}</optgroup><optgroup label="Híbridos">${Object.keys(HYB).map(m=>`<option ${m===d.car?'selected':''}>${m}</option>`).join('')}</optgroup></select></div>${f('color','Cor *',d.color)}</div>
+      <div class="grid2">${f('year','Ano (2014 ou mais novo) *',d.year,'number')}<div class="field"><label for="drv-doc">CRLV e antecedentes</label><input id="drv-doc" type="file" accept="image/*,application/pdf"></div></div>`
+      :`<div class="field"><label for="pass-doc">Documento com foto (RG ou CNH)</label><input id="pass-doc" type="file" accept="image/*,application/pdf"></div>`}
+      <label class="check"><input type="checkbox" id="${who}-decl" name="decl" ${u.decl?'checked':''}> <span>${drv?'Declaro que as informações são verdadeiras e concordo com a verificação de identidade e de antecedentes.':'Declaro que sou mulher e concordo com a verificação de identidade.'} Declaração falsa leva ao bloqueio da conta.</span></label>
+      <label class="check"><input type="checkbox" id="${who}-terms" name="terms" checked> <span>${drv?'Autorizo o monitoramento do percurso e o envio da minha localização à central em caso de socorro.':'Ao iniciar cada corrida, minha rota é compartilhada automaticamente com meu contato de emergência. Autorizo também o monitoramento do percurso pela central.'}</span></label>
+      <details class="small"><summary><strong>Dicas de bom convívio e taxa de limpeza</strong></summary><ol class="tips" style="margin-top:8px">${DICAS.map(t=>`<li>${t}</li>`).join('')}</ol><p>${REGRA_LIMPEZA}</p></details>
+      <label class="check"><input type="checkbox" id="${who}-tips" name="tips" ${u.reg||u.tipsOk?'checked':''}> <span>Li e aceito as dicas de bom convívio e a regra da taxa de limpeza.</span></label>
+      ${u.err?`<p class="err" role="alert">${esc(u.err)}</p>`:''}
+      <button class="btn" type="submit">${u.reg?'Salvar cadastro':'Criar conta e verificar'}</button>
+    </form>
+  </div>`;
+}
+// ---------- servidor (ativo quando o app é aberto pelo servidor Python) ----------
+const API = { on:false };
+async function api(method, path, body){
+  const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const j = await r.json().catch(()=>({})); if(!r.ok) throw j; return j;
+}
+function apiErr(e){ const d=e&&e.detail; return d&&d.erros ? d.erros.join(' ') : (typeof d==='string' ? d : 'Não foi possível falar com o servidor.'); }
+function sync(method, path, body, ok){
+  if(!API.on) return;
+  api(method,path,body).then(j=>{ if(ok){ ok(j); render(); } }).catch(e=>{ log('desvio','Servidor: '+apiErr(e)); render(); });
+}
+const rid = () => S.ride && S.ride.id;
+function cadastroPayload(who,d,u){
+  const base={nome:d.name,cpf:d.cpf,nascimento:d.birth,telefone:d.phone,email:d.email,contato_nome:d.emerName,contato_telefone:d.emerPhone,aceite_monitoramento:true,foto:u.photo};
+  return who==='pass' ? {...base,declaracao_mulher:true}
+    : {...base,sexo:d.sex,declaracao_veracidade:true,cnh:d.cnh,cnh_validade:d.cnhVal,crlv_validade:d.crlvVal,bluetooth_tipo:d.btTipo,bluetooth_nome:d.btNome||null,placa:d.plate,modelo:d.car,cor:d.color,ano:+d.year};
+}
+(async()=>{ try{ const r=await fetch('/api/saude'); const j=r.ok?await r.json():null; if(j&&j.ok){ API.on=true; loadZones(); loadPostos(); loadOcorr(); render(); } }catch(_){} })();
+
+function submitReg(form){
+  const who=form.dataset.who, u=S[who], fd=new FormData(form), d={};
+  for(const k of Object.keys(u.data)) d[k]=(fd.get(k)||'').toString().trim();
+  const digits=s=>s.replace(/\D/g,'');
+  let err='';
+  const age = d.birth ? (Date.now()-new Date(d.birth))/31557600000 : 0;
+  if(!d.name || d.name.split(/\s+/).length<2) err='Informe o nome completo.';
+  else if(digits(d.cpf).length!==11) err='O CPF precisa ter 11 dígitos.';
+  else if(age<18) err='É preciso ter 18 anos ou mais.';
+  else if(digits(d.phone).length<10) err='Informe um celular com DDD.';
+  else if(!/^\S+@\S+\.\S+$/.test(d.email)) err='Informe um e-mail válido.';
+  else if(!d.emerName || digits(d.emerPhone).length<10) err='Informe o contato de emergência com telefone.';
+  else if(who==='drv' && digits(d.cnh).length!==11) err='A CNH precisa ter 11 dígitos.';
+  else if(who==='drv' && (!d.cnhVal || daysTo(d.cnhVal)<0)) err='A CNH está vencida. Renove para continuar.';
+  else if(who==='drv' && !/^[A-Z]{3}-?\d[A-Z0-9]\d{2}$/i.test(d.plate)) err='Placa inválida. Use o formato ABC-1D23.';
+  else if(who==='drv' && (!d.crlvVal || daysTo(d.crlvVal)<0)) err='O CRLV está vencido. Faça o licenciamento do veículo para continuar.';
+  else if(who==='drv' && d.btTipo!=='nenhum' && !d.btNome) err='Informe o nome do Bluetooth do veículo, como aparece no celular.';
+  else if(who==='drv' && !EVS[d.car] && !HYB[d.car]) err='Só aceitamos veículos elétricos ou híbridos da lista.';
+  else if(who==='drv' && (+d.year<2014)) err='O veículo precisa ser 2014 ou mais novo.';
+  else if(!fd.get('decl')) err='Confirme a declaração para continuar.';
+  else if(!fd.get('terms')) err='O monitoramento de percurso é obrigatório para usar o app.';
+  else if(!fd.get('tips')) err='Aceite as dicas de bom convívio e a regra da taxa de limpeza.';
+  u.data=d; u.err=err; u.decl=!!fd.get('decl'); u.tipsOk=!!fd.get('tips');
+  // quem dirige e já tem cadastro: só atualiza as validades (documento renovado), sem criar outra conta
+  if(!err && API.on && who==='drv' && u.id){ api('PUT',`/api/motoristas/${u.id}/documentos`,{cnh_validade:d.cnhVal,crlv_validade:d.crlvVal,bluetooth_tipo:d.btTipo,bluetooth_nome:d.btNome||null})
+      .catch(e=>{ u.err=apiErr(e); render(); }); }
+  else if(!err && API.on){ api('POST', who==='pass'?'/api/passageiras':'/api/motoristas', cadastroPayload(who,d,u))
+      .then(j=>{ u.id=j.id; }).catch(e=>{ u.reg=false; u.err=apiErr(e); render(); }); }
+  if(!err && who==='drv' && !u.reg){ S.drv.vida.ate=S.simT+VIDA_MIN[0]*60; }
+  if(!err){ const first=!u.reg; u.reg=true; S.editing=null; log('info',`${who==='drv'?'Motorista':'Passageira'} ${d.name} ${first?(who==='drv'&&d.sex==='M'?'cadastrado.':'cadastrada.')+' Verificação facial e documento aprovados (simulado).':'atualizou o cadastro.'}`); }
+  render();
+}
+
+// ---------- telas: passageira ----------
+function bagRow(){
+  const n=S.pass.vol||0, pct=bagPct(n);
+  return `<div class="card" style="background:var(--bg);gap:8px"><div class="row between"><span><strong>Compras no porta-malas?</strong><br><span class="small muted">Sacolas ou caixas. Bagagem de mão não conta.</span></span>
+    <span class="pm"><button data-act="vol" data-d="-1" aria-label="Menos volumes">−</button><span class="num" aria-live="polite">${n}</span><button data-act="vol" data-d="1" aria-label="Mais volumes">+</button></span></div>
+    <span class="small ${pct?'':'muted'}">${n===0?'Sem compras.':pct?`${n} volumes: acréscimo de ${Math.round(pct*100)}% no valor da corrida.`:`${n} ${n===1?'volume':'volumes'}: sem acréscimo (até 2 é grátis).`}</span>
+    <span class="small muted">3 a 4 volumes +3% · 5 a 6 +5% · 7 a 8 +7% · 9 ou mais +10%</span></div>`;
+}
+function passView(){
+  const u=S.pass; if(!u.reg||S.editing==='pass') return regForm('pass');
+  const r=S.ride;
+  const top=`<div class="card"><div class="row between"><div class="person"><img class="av" src="${photoOf('pass')}" alt=""><div><h3>Olá, ${esc(u.data.name.split(' ')[0])}</h3><p class="small muted">★ ${u.rating.toString().replace('.',',')} · conta verificada</p></div></div><button class="btn ghost sm" data-act="edit" data-who="pass">Cadastro</button></div></div>`;
+  if(!r || r.status==='cancel'){
+    const e=S.dest?estimate(S.origin,S.dest):null, over=e&&e.km>P.maxKm;
+    return top+taxaPass()+`<div class="card">
+      <div><p class="eyebrow">Nova corrida</p><h2>Para onde vamos?</h2></div>
+      <div class="seg" role="group" aria-label="Quando"><button data-act="agMode" data-v="agora" aria-pressed="${S.agMode!=='ag'}">Agora</button><button data-act="agMode" data-v="ag" aria-pressed="${S.agMode==='ag'}">Agendar</button></div>
+      <div class="seg" role="group" aria-label="Toque no mapa para definir"><button data-act="pick" data-v="origin" aria-pressed="${S.pick==='origin'}">A · Embarque</button><button data-act="pick" data-v="dest" aria-pressed="${S.pick==='dest'}">B · Destino</button></div>
+      <div class="toggle"><button class="switch" role="switch" aria-checked="${u.prefFem}" aria-label="Prefiro motorista mulher" data-act="prefFem"></button><span>Prefiro motorista mulher <span class="small muted">(pode demorar mais)</span></span></div>${S.agMode==='ag'?'':favRowReq()}
+      <div class="mapbox click">${mapSvg({clickable:true,limit:true})}<span class="maphint">Toque para marcar ${S.pick==='dest'?'o destino':'o embarque'} · área tracejada = ${P.maxKm} km</span></div>
+      ${e?`<div class="row"><span class="chip">${esc(e.region)}</span>${e.surge>1?`<span class="chip hot">Alta demanda ${String(e.surge).replace('.',',')}x</span>`:''}${e.night?`<span class="chip night">Noturno +20%</span>`:''}</div>
+      ${zoneAlertBox(routeAlert(e.br.path))}${routeObsBox(e.br.obs)}
+      ${over?`<div class="alert bad">Destino a ${fmtKm(e.km)} pelo trajeto. O limite por corrida é ${P.maxKm} km. Escolha um ponto dentro da área tracejada.</div>`
+      :fareRows(e.f,e)}
+      ${bagRow()}${cardRow()}${loyalRow()}${S.pass.suspended?'<div class="alert bad"><span>Sua conta está suspensa enquanto a central analisa uma denúncia.</span></div>':''}${blockedPair()?`<p class="small muted">Você bloqueou ${esc(S.drv.data.name)}; essa pessoa não receberá suas chamadas.</p>`:''}
+      ${S.agMode==='ag'&&!over?agForm(e):''}
+      <button class="btn" data-act="request" ${over||!u.card||u.suspended?'disabled':''}>${S.agMode==='ag'?'Agendar corrida':'Pedir corrida'} ${over?'':'· '+brl(e.f.total)}${S.agMode==='ag'&&!over?' (estimativa)':''}</button>`:'<p class="muted">Toque no mapa para escolher o destino.</p>'}
+      ${r&&r.status==='cancel'?`<p class="small muted">Corrida anterior cancelada.</p>`:''}
+    </div>${agCardPass()}${favCardPass()}${reclCard('pass')}${resumoCard('pass')}${tipsBox('pass')}`;
+  }
+  const d=S.drv, dcard=`<div class="person"><img class="av" src="${photoOf('drv')}" alt="Foto ${dm().d} motorista"><div><h3>${esc(d.data.name)}</h3><p class="small muted">★ ${d.rating.toString().replace('.',',')} · ${esc(d.data.car)} ${esc(d.data.color)} · <span class="chip ok">⚡ ${EVS[d.data.car]?'elétrico':'híbrido'}</span></p><p class="num small"><strong>${esc(d.data.plate.toUpperCase())}</strong></p></div></div>`;
+  if(r.status==='searching') return top+`<div class="card"><p class="eyebrow">Corrida solicitada</p>${netBox('pass')}${r.drvCancelled?`<div class="alert warn small"><span>${dm().A} motorista cancelou. Estamos buscando outra pessoa para você, sem custo.</span></div>`:''}<h2 class="pulse">${r.declined?'Buscando outro(a) motorista…':r.prefFem?'Procurando motorista mulher perto de você…':'Procurando motorista perto de você…'}</h2>
+    <div class="mapbox">${mapSvg({stale:true})}</div>${fareRows(r.f0,r)}
+    <div class="alert info small">Demo: abra a aba Motorista para aceitar a corrida.</div>
+    <button class="btn ghost" data-act="cancel">Cancelar pedido</button></div>`;
+  if(r.status==='accepted'){ const eta=(pathLen(r.approach)-r.approachDone)/SPEED*60;
+    return top+`<div class="card"><p class="eyebrow">Motorista a caminho · chega em ${Math.max(1,Math.ceil(eta))} min${weak('drv')||weak('pass')?' (horário impreciso)':''}</p>${dcard}${netBox('pass')}
+    <div class="mapbox">${mapSvg({stale:true})}</div>
+    <div class="row between"><span>Código de embarque</span><span class="pin">${r.pin}</span></div>
+    <p class="small muted">Confira a foto, a placa e informe o código ${dm().a==='o'?'ao':'à'} motorista antes de entrar.</p>
+    ${chatBox('pass')}${apoioBanner()}${shareBtn()}${apoioBtn('pass')}${cancelInfoPass(r)}<button class="btn ghost" data-act="cancel">Cancelar corrida</button></div>`; }
+  if(r.status==='arrived') return top+`<div class="card"><p class="eyebrow">${dm().a==='o'?'Seu':'Sua'} motorista chegou</p>${dcard}${netBox('pass')}
+    ${r.autoArrived?`<div class="alert ok small"><span>Chegada confirmada pelo GPS: ${dm().a} motorista está no ponto de embarque.</span></div>`:''}
+    ${waitBox(r)}<div class="row between"><span>Código de embarque</span><span class="pin">${r.pin}</span></div>
+    <div class="mapbox">${mapSvg({stale:true})}</div>${chatBox('pass')}${apoioBanner()}${shareBtn()}${apoioBtn('pass')}${cancelInfoPass(r)}<button class="btn ghost" data-act="cancel">Desistir da corrida</button></div>${tipsBox('pass')}`;
+  if(r.status==='ontrip') return top+`<div class="card"><p class="eyebrow">Em viagem · ${esc(r.region)}</p>${dcard}
+    ${netBox('pass')}${r.movingSec<120?'<div class="alert info small"><span>Coloque o cinto de segurança. Com o ar ligado, mantenha os vidros fechados.</span></div>':''}${monitorBox(r,'pass')}${trafficBox(r,'pass')}${r.autoShared?`<div class="alert ok"><span>Rota compartilhada automaticamente com ${esc(S.pass.data.emerName)}. Ela acompanha o trajeto ao vivo.</span>${r.shareLink?`<div class="row between"><span class="small num" style="word-break:break-all;font-weight:500">${esc(r.shareLink)}</span><button class="btn sm soft" data-act="copyLink">Copiar link</button></div>`:''}</div>`:''}
+    <div class="mapbox">${mapSvg({stale:true})}</div>
+    ${r.stopping?waitBox(r,true):''}
+    <div class="row between"><span>Valor até agora</span><span class="big num">${brl(liveFare(r).total)}</span></div>
+    <div class="btns"><button class="btn soft" data-act="stop">${r.stopping?'Retomar viagem':'Pedir parada'}</button>${shareBtn(true)}</div>${chatBox('pass')}${apoioBanner()}${apoioBtn('pass')}</div>${tipsBox('pass')}`;
+  if(r.status==='done') return top+`<div class="card"><p class="eyebrow">Corrida concluída</p><h2>Você chegou. Que bom!</h2>${dcard}
+    ${fareRows(r.final,{...r,min:Math.max(0,r.movingSec/60-(r.extraMin||0))})}
+    ${payLines(r,'pass')}${taxaPass()}${apoioBanner()}
+    <div class="alert info small"><span>Confira se não esqueceu nada no carro. ${AVISO_OBJ} O chat com ${dm().a} motorista foi encerrado; para falar sobre esta corrida, abra uma reclamação.</span></div>${reviewForm(r,'pass')}${favRow(r)}
+    <button class="btn" data-act="newride">Nova corrida</button></div>${reclCard('pass')}`;
+  return top;
+}
+// ---------- sinal de internet ----------
+// Cada aparelho mede o próprio sinal (rede informada pelo navegador + tempo de resposta do servidor).
+// Na demo, os botões "Sinal" no topo simulam sinal fraco para cada lado.
+const NET = { real:'bom', ping:null, sim:{pass:false, drv:false}, last:{pass:'bom', drv:'bom'} };
+const quality = who => NET.sim[who] ? 'fraco' : NET.real;
+const weak = who => quality(who) !== 'bom';
+async function measureNet(){
+  const cn = navigator.connection || {};
+  let q = navigator.onLine===false ? 'sem' : (['slow-2g','2g'].includes(cn.effectiveType) || cn.rtt>700) ? 'fraco' : 'bom';
+  if(API.on && q!=='sem'){ const t0=performance.now();
+    try{ const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),4000); await fetch('/api/saude',{cache:'no-store',signal:ctl.signal}); clearTimeout(to); NET.ping=performance.now()-t0; if(NET.ping>1500) q='fraco'; }
+    catch(_){ q='sem'; } }
+  if(q!==NET.real){ NET.real=q; netChanged(); }
+}
+function netChanged(){
+  for(const who of ['pass','drv']){ const q=quality(who); if(q===NET.last[who]) continue; NET.last[who]=q;
+    const nome = who==='pass' ? 'da passageira' : dm().d+' motorista';
+    log(q==='bom'?'info':'desvio', q==='bom' ? `Sinal de internet ${nome} normalizado.` : `Sinal de internet ${q==='sem'?'perdido':'fraco'} na localização ${nome}. Localização e chegada podem atrasar.`);
+    const onde = netPos(who);
+    if(q!=='bom' && onde) addLocalReport(onde,q);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/sinal`,{por:who==='pass'?'passageira':'motorista',qualidade:q,rtt_ms:NET.ping?Math.round(NET.ping):null,...(onde||{})},()=>loadZones()); }
+  render();
+}
+addEventListener('online',measureNet); addEventListener('offline',measureNet);
+try{ navigator.connection && navigator.connection.addEventListener('change',measureNet); }catch(_){}
+setInterval(measureNet,5000); measureNet();
+function netBox(viewer){
+  const r=S.ride; if(!r || !['searching','accepted','arrived','ontrip'].includes(r.status)) return '';
+  const other = viewer==='pass' ? 'drv' : 'pass', mine=quality(viewer), theirs=quality(other);
+  const out=[];
+  if(r.zoneAlert && r.status!=='searching') out.push(r.zoneAlert);
+  if(mine!=='bom') out.push(viewer==='pass'
+    ? `${mine==='sem'?'Você está sem internet.':'Seu sinal de internet está fraco.'} Sua localização pode chegar com atraso para ${dm().a} motorista, e a chegada ao embarque pode demorar a atualizar.`
+    : `${mine==='sem'?'Você está sem internet.':'Seu sinal de internet está fraco.'} A passageira pode ver sua posição e sua chegada com atraso.`);
+  if(theirs!=='bom' && r.status!=='searching'){
+    const age = r.seen ? Math.round((Date.now()-r.seen.t)/1000) : 0;
+    out.push(viewer==='pass'
+      ? `Sinal de internet ${theirs==='sem'?'perdido':'fraco'} na localização d${dm().a} motorista. A posição do carro e o horário de chegada ao embarque podem estar imprecisos.${age>1?` Última posição recebida há ${age} s.`:''}`
+      : `Sinal de internet ${theirs==='sem'?'perdido':'fraco'} na localização da passageira. Ela pode demorar a ver sua chegada; confira o ponto de embarque com atenção.`); }
+  return out.length ? `<div class="alert warn" role="status"><span>📶 ${out.join('</span><span>📶 ')}</span></div>` : '';
+}
+
+// ---------- zonas de sinal fraco ----------
+// Com servidor: vêm de /api/zonas-sinal (formadas pelos relatos das corridas e marcadas pela central).
+// Sem servidor: exemplos marcados como tal + relatos feitos neste aparelho.
+const CELL_KM = 10;
+S.zones = [
+  {id:'ex-1',tipo:'automatica',celula:'3:5',centro:{x:35,y:55},lado_km:CELL_KM,relatos:4,nivel:'fraco',regiao:'Região Norte',nota:'exemplo'},
+  {id:'ex-2',tipo:'automatica',celula:'19:16',centro:{x:195,y:165},lado_km:CELL_KM,relatos:7,nivel:'sem sinal',regiao:'Região Sul',nota:'exemplo'},
+  {id:'ex-3',tipo:'manual',centro:{x:130,y:200},raio_km:8,nivel:'fraco',regiao:'Região Sul',nota:'Túnel da serra (exemplo)'},
+];
+S.markZone=false;
+const cellOf = p => `${Math.floor(p.x/CELL_KM)}:${Math.floor(p.y/CELL_KM)}`;
+const cellCenter = c => { const [i,j]=c.split(':').map(Number); return {x:(i+.5)*CELL_KM, y:(j+.5)*CELL_KM}; };
+function zoneAt(p){
+  return S.zones.find(z => z.tipo==='automatica' ? z.celula===cellOf(p) : Math.hypot(p.x-z.centro.x,p.y-z.centro.y)<=z.raio_km) || null;
+}
+function routeAlert(path){
+  if(!path || !S.dest) return null;
+  const len=pathLen(path); if(!len) return null;
+  const emb=zoneAt(path[0]), dst=zoneAt(path[path.length-1]); let trajeto=false;
+  for(let k=0;k<=Math.ceil(len);k++){ if(zoneAt(pointAt(path,Math.min(len,k)))){ trajeto=true; break; } }
+  const partes=[emb&&'no embarque', dst&&'no destino'].filter(Boolean); if(trajeto && !partes.length) partes.push('no trajeto');
+  return partes.length ? `Região com sinal de internet fraco ${partes.join(' e ')}. A localização e o horário de chegada podem atrasar.` : null;
+}
+const zoneAlertBox = msg => msg ? `<div class="alert warn" role="status"><span>📶 ${msg}</span></div>` : '';
+function netPos(who){
+  const r=S.ride;
+  if(who==='drv') return carPos() || {...S.drv.pos};
+  if(r && ['searching','accepted','arrived'].includes(r.status)) return {...r.o};
+  return (r && carPos()) || {...S.origin};
+}
+function addLocalReport(p,q){
+  if(API.on) return; // o servidor cuida
+  const cel=cellOf(p), z=S.zones.find(z=>z.tipo==='automatica'&&z.celula===cel);
+  if(z){ z.relatos++; if(q==='sem') z.nivel='sem sinal'; }
+  else S.zones.unshift({id:'loc-'+cel,tipo:'automatica',celula:cel,centro:cellCenter(cel),lado_km:CELL_KM,relatos:1,nivel:q==='sem'?'sem sinal':'fraco',regiao:regionOf(cellCenter(cel)),nota:null});
+}
+// ---------- Motora Verde: desconto em postos credenciados (recarga e etanol) ----------
+const TIPO_POSTO={recarga:'Recarga elétrica',etanol:'Etanol',pneu:'Reparo de pneu',bateria:'Bateria'};
+const ICON_POSTO={recarga:['⚡','var(--ok)'],etanol:['E','var(--warn)'],pneu:['P','var(--ink)'],bateria:['B','var(--accent)']};
+// demo: níveis sobem rápido. Na operação real: Prata com 60 e Ouro com 120 corridas em 30 dias
+const NIV_VERDE=[['Ouro',3,0.15],['Prata',1,0.10],['Verde',0,0.05]], TETO_VERDE=300, NOTA_VERDE=4;
+const verdeOk = () => S.drv.rating >= NOTA_VERDE;
+S.postos=[['Eletroposto Centro Verde','recarga',118,125],['Eletroposto Av. Paulista','recarga',140,95],['Posto Etanol Bom Caminho','etanol',85,150],
+  ['Eletroposto Shopping Norte','recarga',60,50],['Posto Etanol Sul','etanol',190,200],['Eletroposto Leste Rápido','recarga',210,70],
+  ['Borracharia 24h Centro','pneu',130,140],['Borracharia Rota Norte','pneu',70,80],['Baterias Já Oeste','bateria',90,175],['Centro de Baterias Leste','bateria',175,110]]
+  .map(([nome,tipo,x,y],i)=>({id:'local-'+i,nome,tipo,x,y,regiao:regionOf({x,y})}));
+S.verde={cupom:null,hist:[],err:''}; S.markPosto=false;
+function combVeiculo(m){ if(EVS[m]) return ['recarga']; const k=HYB[m]||''; return k.includes('plug-in')?['recarga']:k.includes('flex')?['etanol']:[]; }
+const tiposVeiculo = m => [...combVeiculo(m),'pneu','bateria'];   // pneu e bateria valem para toda a frota
+function nivelVerde(){ const n=S.drv.trips, [nome,,pct]=NIV_VERDE.find(x=>n>=x[1]), prox=[...NIV_VERDE].reverse().find(x=>x[1]>n);
+  const usado=S.verde.hist.reduce((a,h)=>a+h.desconto,0);
+  return {nome,pct,n,prox,usado,saldo:Math.max(0,TETO_VERDE-usado)}; }
+function loadPostos(){ if(API.on) api('GET','/api/postos').then(j=>{ S.postos=j; render(); }).catch(()=>{}); }
+function postosSvg(){
+  return S.postos.map(p=>{ const [ic,cor]=ICON_POSTO[p.tipo]||['?','var(--muted)'];
+    return `<g transform="translate(${p.x*K},${p.y*K})" aria-label="${esc(p.nome)}"><circle r="8" fill="${cor}" stroke="var(--surface)" stroke-width="2"/><text y="3.5" font-size="9" text-anchor="middle" font-weight="800" fill="var(--surface)" font-family="Figtree,sans-serif">${ic}</text></g>`; }).join('');
+}
+// ---------- vencimento da CNH e do CRLV ----------
+const daysTo = iso => Math.floor((new Date(iso+'T23:59:59') - new Date())/864e5);
+const fmtDate = iso => iso ? iso.split('-').reverse().join('/') : '—';
+function docsState(){ const d=S.drv.data, it=[['CNH',d.cnhVal],['CRLV',d.crlvVal]].map(([n,v])=>({n,v,dias:v?daysTo(v):-1}));
+  return {it, vencidos:it.filter(x=>x.dias<0), avisos:it.filter(x=>x.dias>=0&&x.dias<=30)}; }
+const docsOk = () => !docsState().vencidos.length;
+function docsBox(){
+  const st=docsState();
+  if(st.vencidos.length) return `<div class="alert bad"><span>${st.vencidos.map(x=>x.n).join(' e ')} vencid${st.vencidos.length>1?'os':'o'} desde ${st.vencidos.map(x=>fmtDate(x.v)).join(' e ')}. Você não recebe corridas até enviar o documento renovado.</span><button class="btn sm" style="width:auto" data-act="edit" data-who="drv">Enviar documento renovado</button></div>`;
+  if(st.avisos.length) return `<div class="alert warn"><span>${st.avisos.map(x=>`Seu ${x.n} vence em ${x.dias} dia${x.dias!==1?'s':''} (${fmtDate(x.v)}).`).join(' ')} Renove e atualize no cadastro para não ficar sem corridas.</span>
+    <span class="row" style="gap:6px"><button class="btn sm soft" style="width:auto" data-act="edit" data-who="drv">Atualizar documento</button><button class="btn sm ghost" style="width:auto" data-act="docDemo">Simular CRLV vencido (demo)</button></span></div>`;
+  return `<p class="small muted" style="margin:0">CNH válida até ${fmtDate(S.drv.data.cnhVal)} · CRLV até ${fmtDate(S.drv.data.crlvVal)}</p>`;
+}
+
+// ---------- jornada: no máximo 12 h de trabalho, depois 6 h de descanso ----------
+const MAX_JOR=12*3600, DESC_JOR=6*3600;
+S.drv.jor={work:0,off:0,rest:0};
+const hhmm = sec => { const m=Math.max(0,Math.round(sec/60)); return `${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}`; };
+// ---------- prova de vida e bem-estar de quem dirige ----------
+// Selfie a cada volta ao app; vale 60 min e encurta a cada saída nas últimas 24 h (45, 30, 15 min).
+const VIDA_MIN=[60,45,30,15], PARADO_SEG=10*60, PARADO_IDLE_SEG=30*60, BEM_RESP_SEG=60;
+S.simT=0; S.drv.vida={ate:0,saidas:[]}; S.vidaModal=null; S.bem=null; S.assalto=null;
+const saidas24 = () => (S.drv.vida.saidas=S.drv.vida.saidas.filter(t=>S.simT-t<86400)).length;
+const vidaMin = () => VIDA_MIN[Math.min(Math.max(saidas24()-1,0),VIDA_MIN.length-1)];
+const vidaOk = () => S.drv.vida.ate > S.simT;
+function vidaBox(){
+  const v=S.drv.vida;
+  if(!vidaOk()) return `<div class="alert warn"><span>Prova de vida pendente. Tire uma selfie para ${S.drv.online?'continuar recebendo':'ficar disponível e receber'} corridas.</span><button class="btn sm" style="width:auto" data-act="vidaOpen">Fazer prova de vida</button></div>`;
+  return `<p class="small muted" style="margin:0">Prova de vida válida por mais ${hhmm(v.ate-S.simT)}. A próxima vale ${vidaMin()} min${saidas24()>1?` (${saidas24()} saídas do app nas últimas 24 h)`:''}.</p>`;
+}
+function vidaModal(){
+  const m=S.vidaModal; if(!m) return '';
+  return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="vdT"><div class="card">
+    <p class="eyebrow">Prova de vida</p><h2 id="vdT">Tire uma selfie agora</h2>
+    <p class="small muted">Comparamos com a foto do seu cadastro para confirmar que é você quem está dirigindo. Rosto descoberto, sem óculos escuros e com boa luz.</p>
+    <div class="photo-pick"><img class="av lg" src="${m.selfie||photoOf('drv')}" alt="Selfie"><div class="field"><label for="vidaFoto">Câmera frontal</label><input id="vidaFoto" type="file" accept="image/*" capture="user" data-vida="1"></div></div>
+    <p class="small">Esta prova vale ${vidaMin()} min. ${saidas24()>1?'O prazo diminui porque você saiu do app várias vezes hoje.':'A cada nova saída do app, o prazo da próxima diminui.'}</p>
+    ${m.err?`<p class="err">${esc(m.err)}</p>`:''}
+    <div class="btns"><button class="btn ghost" data-act="vidaClose">Agora não</button><button class="btn" data-act="vidaSend">${m.selfie?'Enviar selfie':'Usar selfie de teste (demo)'}</button></div></div></div>`;
+}
+// ---------- celular no Bluetooth do carro e bateria ----------
+// O app nativo lê a conexão Bluetooth com o carro; no navegador, o botão "Bluetooth" no topo simula.
+S.drv.bt={on:true,bat:null};
+const BT_TIPOS={multimidia:'Sim, multimídia do próprio veículo',adaptador:'Adaptador Bluetooth instalado no veículo',nenhum:'O veículo não tem Bluetooth'};
+const btTem = () => S.drv.data.btTipo!=='nenhum';
+try{ navigator.getBattery && navigator.getBattery().then(b=>{ const up=()=>{ S.drv.bt.bat=Math.round(b.level*100); S.drv.bt.charging=b.charging; }; up(); b.addEventListener('levelchange',()=>{ up(); render(); }); b.addEventListener('chargingchange',()=>{ up(); render(); }); }).catch(()=>{}); }catch(_){}
+const drvWorking = () => S.drv.reg && (S.drv.online || (S.ride && ['accepted','arrived','ontrip'].includes(S.ride.status)));
+function btChanged(){
+  const bt=S.drv.bt;
+  if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/conexao`,{bluetooth:bt.on,bateria:bt.bat,corrida_id:rid()||null});
+  if(!btTem()) return render();
+  if(!bt.on && drvWorking() && !S.assalto){
+    log('desvio',`Celular de ${S.drv.data.name} desconectou do Bluetooth do carro. Perguntamos se está tudo bem.`);
+    if(!S.bem) S.bem={t0:Date.now(),parado:0,cid:rid(),motivo:'bluetooth'};
+  } else if(bt.on){
+    if(S.bem && S.bem.motivo==='bluetooth'){ S.bem=null; }
+    if(drvWorking()) log('info',`Celular de ${S.drv.data.name} reconectou ao Bluetooth do carro.`);
+  }
+  render();
+}
+// lembrete ao iniciar a corrida: conectar o celular ao Bluetooth do carro
+function btLembrete(){
+  if(!btTem()) return `<div class="alert warn small"><span>Para sua segurança, instale um adaptador Bluetooth no carro e cadastre. Assim percebemos se algo muda de repente.</span></div>`;
+  if(S.drv.bt.on) return `<p class="small" style="color:var(--ok);margin:0">✓ Celular conectado ao Bluetooth do carro (${esc(S.drv.data.btNome)}).</p>`;
+  return `<div class="alert warn"><span>Conecte o celular ao Bluetooth do carro (${esc(S.drv.data.btNome)}) antes de iniciar. Isso melhora a sua segurança: se o celular se afastar do carro, a central é avisada.</span><button class="btn sm soft" style="width:auto" data-act="bt">Já conectei</button></div>`;
+}
+function btBox(){
+  const bt=S.drv.bt, low=bt.bat!=null && bt.bat<=20 && !bt.charging;
+  if(!btTem()) return `<div class="alert warn"><span>Seu veículo está sem Bluetooth cadastrado, então o monitoramento de mudança repentina fica desligado. Recomendamos instalar um adaptador Bluetooth e atualizar o cadastro.</span><button class="btn sm soft" style="width:auto" data-act="edit" data-who="drv">Atualizar cadastro</button></div>`;
+  return `${bt.on?`<p class="small muted" style="margin:0">Bluetooth do veículo: <strong>${esc(S.drv.data.btNome)}</strong> · ${S.drv.data.btTipo==='adaptador'?'adaptador':'multimídia'} · conectado</p>`:''}${!bt.on?'<div class="alert warn"><span>Celular fora do Bluetooth do carro (${esc(S.drv.data.btNome)}). Reconecte para manter o monitoramento de segurança.</span></div>':''}${low?`<div class="alert warn"><span>Bateria do celular em ${bt.bat}%. Conecte o carregador para não perder o monitoramento.</span></div>`:''}`;
+}
+function bemModal(){
+  const b=S.bem; if(!b) return '';
+  const left=Math.max(0,BEM_RESP_SEG-Math.round((Date.now()-b.t0)/1000)), bt=b.motivo==='bluetooth';
+  return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="beT"><div class="card">
+    <p class="eyebrow" style="color:var(--warn)">${bt?'O celular desconectou do Bluetooth do carro':`Você está parad${dm().a} há ${Math.round(b.parado/60)} min`}</p><h2 id="beT">Está tudo bem, ${esc(S.drv.data.name.split(' ')[0])}?</h2>
+    <p class="small muted">Sem resposta em <strong class="num">${left} s</strong>, a central é avisada e liga para você.</p>
+    ${bt?'<p class="small">Notamos uma mudança repentina: o celular se afastou do carro ou perdeu a conexão. Se foi só o celular, reconecte o Bluetooth.</p>':''}
+    <div class="btns" style="flex-direction:column"><button class="btn ok" data-act="bem" data-r="ok">Estou bem${bt?', foi só o celular':''}</button>
+      <button class="btn apoio" data-act="bem" data-r="ajuda">Preciso de ajuda (Socorro Motora)</button>
+      <button class="btn" style="background:var(--sos);color:#fff" data-act="bem" data-r="policia">Ligar para a polícia (190)</button>
+      <button class="btn ghost" style="border-color:var(--sos);color:var(--sos)" data-act="bem" data-r="assalto">Modo assalto (alerta silencioso)</button></div></div></div>`;
+}
+function assaltoStart(origem){
+  const r=S.ride, c=carPos()||S.drv.pos;
+  S.assalto={t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),pos:c}; S.bem=null; S.sosPending=null; clearInterval(sosTimer);
+  log('sos',`MODO ASSALTO (silencioso) acionado por ${S.drv.data.name} em ${regionOf(c)} (${c.x.toFixed(1)} km, ${c.y.toFixed(1)} km)${origem?` ${origem}`:''}. Acionar a polícia e NÃO ligar para o aparelho. Contato de emergência avisado em silêncio.`);
+  if(rid()) sync('POST',`/api/corridas/${rid()}/sos`,{por:'motorista',modo:'assalto'});
+  render();
+}
+// tela disfarçada: parece o app comum, sem nenhum sinal de alerta
+function assaltoView(){
+  return `<div class="card"><div class="person"><img class="av" src="${photoOf('drv')}" alt=""><div><h3>${esc(S.drv.data.name)}</h3><p class="small muted">Offline</p></div></div></div>
+    <div class="card"><p class="eyebrow">Corrida encerrada</p><h2>Obrigado por dirigir com a Motora</h2><p class="muted">Você está offline. Fique disponível quando quiser voltar a receber chamadas.</p>
+    <button class="btn ghost sm" style="width:auto;align-self:flex-start" data-act="assaltoSair">Ajuda</button></div>`;
+}
+function jornadaTick(){
+  S.simT+=SIM;
+  if(S.drv.reg && !S.assalto){
+    const r=S.ride, busy=r && ['accepted','arrived','ontrip'].includes(r.status);
+    // prova de vida vencida: pede de novo (a corrida em andamento continua)
+    if(S.drv.online && !vidaOk() && !busy && !S.vidaModal && !S.drv.vidaPedida){ S.drv.vidaPedida=true; S.vidaModal={auto:true}; log('info',`Prova de vida de ${S.drv.data.name} venceu. Nova selfie pedida.`); render(); }
+    // parada longa: espera no embarque, parada na viagem ou disponível sem chamada
+    const parado = r&&r.status==='arrived' ? r.waitSec : r&&r.status==='ontrip'&&r.stopping ? (r.stopCur||0) : (!busy&&S.drv.online ? (S.drv.idle=(S.drv.idle||0)+SIM) : 0);
+    if(!S.drv.online || busy) S.drv.idle=0;
+    const lim = busy ? PARADO_SEG : PARADO_IDLE_SEG, key=(r&&r.status)+':'+(r&&r.status==='ontrip'?(r.stopSec||0):'');
+    if(parado>=lim && !S.bem && S.bemKey!==key){ S.bemKey=key; S.bem={t0:Date.now(),parado,cid:rid()}; log('desvio',`${S.drv.data.name} está parad${dm().a} há ${Math.round(parado/60)} min. Perguntamos se está tudo bem.`); render(); }
+    if(S.bem){ if(Date.now()-S.bem.t0>=BEM_RESP_SEG*1000) A.bem({r:'sem_resposta'}); else if(S.view==='drv' && !busy) render(); }
+  }
+  jornadaTick2(); agTick(); offerTick();
+}
+function jornadaTick2(){
+  const J=S.drv.jor, dt=SIM, r=S.ride, busy=r && ['accepted','arrived','ontrip'].includes(r.status);
+  const before=JSON.stringify([J.rest>0, Math.floor(J.work/60)]);
+  if(!S.drv.reg) return;
+  if(J.rest>0){ J.rest=Math.max(0,J.rest-dt); if(!J.rest){ J.work=0; log('info','Descanso obrigatório de 6 h concluído. Liberado para dirigir.'); } }
+  else if(S.drv.online || busy){ J.work+=dt; J.off=0;
+    if(J.work>=MAX_JOR && !busy){ J.work=MAX_JOR; J.rest=DESC_JOR; if(S.drv.online){ S.drv.online=false; S.drv.vida.saidas.push(S.simT); S.drv.vida.ate=0; const reg=S.regions[regionOf(S.drv.pos)]; reg.drivers=Math.max(0,reg.drivers-1); }
+      log('info',`${S.drv.data.name} completou 12 h de trabalho. Descanso obrigatório de 6 h.`); if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/disponibilidade`,{online:false}); } }
+  else { J.off+=dt; if(J.off>=DESC_JOR && J.work){ J.work=0; } }
+  if(JSON.stringify([J.rest>0, Math.floor(J.work/60)])!==before && S.view!=='pass' && !document.querySelector('form.reg') && !busy) render();
+}
+setInterval(jornadaTick,1000);
+function jornadaBox(){
+  const J=S.drv.jor, left=MAX_JOR-J.work, pct=Math.min(100,J.work/MAX_JOR*100);
+  if(J.rest>0) return `<div class="alert bad"><span>Descanso obrigatório: você trabalhou 12 horas. Pode voltar a dirigir em ${hhmm(J.rest)}.</span><button class="btn sm ghost" style="width:auto" data-act="jorDemo" data-k="rest">Simular fim do descanso (demo)</button></div>`;
+  return `<div class="small"><div class="row between"><span>Jornada: <strong class="num">${hhmm(J.work)}</strong> de 12h00</span><span class="${left<3600?'':'muted'}" style="${left<3600?'color:var(--warn);font-weight:700':''}">${left<3600?`Faltam ${hhmm(left)}`:'Máx. 12 h, depois 6 h de descanso'}</span></div>
+    <div style="height:6px;border-radius:6px;background:var(--bg);margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${left<3600?'var(--warn)':'var(--ok)'}"></div></div>
+    ${left<3600?'<p class="small" style="color:var(--warn);margin:4px 0 0">Ao chegar a 12 h, você termina a corrida em andamento e fica offline por 6 h.</p>':''}
+    ${J.work<MAX_JOR-300?'<button class="btn ghost sm" style="width:auto;margin-top:6px" data-act="jorDemo" data-k="work">Simular 11h58 trabalhadas (demo)</button>':''}</div>`;
+}
+function verdeCard(){
+  const u=S.drv, v=nivelVerde(), tipos=tiposVeiculo(u.data.car), here=u.pos;
+  // o parceiro mais perto de cada tipo que o veículo usa
+  const perto=tipos.map(t=>S.postos.filter(p=>p.tipo===t).map(p=>({...p,km:Math.hypot(p.x-here.x,p.y-here.y)})).sort((a,b)=>a.km-b.km)[0]).filter(Boolean), comb=combVeiculo(u.data.car);
+  const c=S.verde.cupom;
+  return `<div class="card"><div class="row between"><div><p class="eyebrow">Motora Verde</p><h3>Desconto na rede credenciada</h3></div>${verdeOk()?`<span class="chip ok">Nível ${v.nome} · ${Math.round(v.pct*100)}%</span>`:'<span class="chip bad">Fora do programa</span>'}</div>
+    <p class="small muted">Postos de combustível limpo, borracharias e serviços de bateria. ${comb.length?`Seu ${esc(u.data.car)} usa ${comb.map(t=>TIPO_POSTO[t].toLowerCase()).join(' e ')}; o desconto em combustível vale só para combustível limpo.`:`Seu ${esc(u.data.car)} é híbrido só a gasolina: tem desconto em pneu e bateria, mas não em combustível.`}</p>
+    <div class="fare small"><span>Corridas nos últimos 30 dias</span><span class="num">${v.n}</span>
+      <span>Desconto usado no mês</span><span class="num">${brl(v.usado)} de ${brl(TETO_VERDE)}</span>
+      ${v.prox?`<span class="muted">Próximo nível: ${v.prox[0]} (${Math.round(v.prox[2]*100)}%)</span><span class="num muted">faltam ${v.prox[1]-v.n} corrida${v.prox[1]-v.n>1?'s':''}</span>`:''}</div>
+    <p class="small muted">Para participar, é preciso ter nota 4 ou 5 estrelas. No mapa: ⚡ recarga, E etanol, P pneu e B bateria. Níveis: Verde 5%, Prata 10% e Ouro 15%. Na demo, Prata vem com 1 corrida e Ouro com 3; na operação real, com 60 e 120 corridas em 30 dias.</p>
+    ${verdeOk()?'':`<div class="alert warn"><span>O Motora Verde é só para quem tem nota 4 ou 5 estrelas. Sua nota hoje é ${S.drv.rating.toFixed(1).replace('.',',')}. Melhore suas avaliações para voltar a ter desconto.</span></div>`}
+    ${!verdeOk()?'':c?`<div class="alert ok"><span>Cupom para ${esc(c.posto)} · ${Math.round(c.desconto_pct*100)}% de desconto</span><span class="pin">${esc(c.codigo)}</span><span class="small">Mostre o código no caixa. Vale por 30 minutos e só neste posto.</span>
+      <div class="field"><label for="verdeValor">Demo: valor abastecido no posto</label><input id="verdeValor" type="number" min="1" step="0.01" inputmode="decimal" placeholder="Ex.: 80,00"></div>
+      <div class="btns"><button class="btn ghost sm" data-act="verdeCancel">Descartar</button><button class="btn sm" data-act="verdeUse">Simular pagamento no posto</button></div></div>`
+    : perto.length ? `<div class="log">${perto.map(p=>`<div style="align-items:center"><span style="flex:1"><strong>${esc(p.nome)}</strong><br><span class="small muted">${TIPO_POSTO[p.tipo]} · ${esc(p.regiao)} · ${fmtKm(p.km)}</span></span><button class="btn sm soft" style="width:auto" data-act="verdeCupom" data-id="${p.id}">Gerar cupom</button></div>`).join('')}</div>` : ''}
+    ${S.verde.err?`<p class="err">${esc(S.verde.err)}</p>`:''}
+    ${S.verde.hist.length?`<p class="eyebrow">Últimos abastecimentos</p><div class="fare small">${S.verde.hist.slice(0,3).map(h=>`<span>${esc(h.posto)}: ${brl(h.valor)}</span><span class="num" style="color:var(--ok)">−${brl(h.desconto)}</span>`).join('')}</div>`:''}</div>`;
+}
+function postosCard(){
+  const rows=S.postos.map(p=>`<tr><td>${esc(p.nome)}</td><td>${TIPO_POSTO[p.tipo]}</td><td>${esc(p.regiao)}</td><td><button class="btn ghost sm" style="width:auto" data-act="postoDel" data-id="${p.id}">Descredenciar</button></td></tr>`).join('');
+  return `<div class="card"><p class="eyebrow">Motora Verde</p><h3>Rede credenciada</h3>
+    <p class="small muted">Postos de recarga elétrica e de etanol, borracharias e serviços de bateria que dão desconto a quem dirige pela Motora com nota 4 ou 5 estrelas (5%, 10% ou 15% conforme o nível, até ${brl(TETO_VERDE)} por mês).</p>
+    <div class="grid2"><div class="field"><label for="postoNome">Nome do novo parceiro</label><input id="postoNome" maxlength="80" placeholder="Ex.: Borracharia Avenida"></div>
+      <div class="field"><label for="postoTipo">Tipo</label><select id="postoTipo">${Object.entries(TIPO_POSTO).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div></div>
+    <button class="btn ${S.markPosto?'':'soft'} sm" data-act="postoMark">${S.markPosto?'Toque no mapa da central…':'Credenciar parceiro no mapa'}</button>
+    <div style="overflow-x:auto"><table><thead><tr><th>Parceiro</th><th>Tipo</th><th>Região</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="muted">Nenhum parceiro credenciado.</td></tr>'}</tbody></table></div></div>`;
+}
+function loadZones(){ if(API.on) api('GET','/api/zonas-sinal').then(j=>{ S.zones=j.zonas; render(); }).catch(()=>{}); }
+function zonesSvg(){
+  return S.zones.map(z=> z.tipo==='automatica'
+    ? `<rect x="${(z.centro.x-z.lado_km/2)*K}" y="${(z.centro.y-z.lado_km/2)*K}" width="${z.lado_km*K}" height="${z.lado_km*K}" fill="url(#hatch)" stroke="var(--warn)" stroke-width="2"/>`
+    : `<circle cx="${z.centro.x*K}" cy="${z.centro.y*K}" r="${Math.max(9,z.raio_km*K)}" fill="url(#hatch)" stroke="var(--warn)" stroke-width="2" stroke-dasharray="4 2"/>`).join('');
+}
+function zonesCard(){
+  const rows=S.zones.map(z=>`<tr><td>${z.tipo==='automatica'?'Automática':'Marcada'}${z.nota?`<br><span class="small muted">${esc(z.nota)}</span>`:''}</td><td>${esc(z.regiao)}</td>
+    <td>${z.nivel==='sem sinal'?'<span class="chip bad">sem sinal</span>':'<span class="chip hot">fraco</span>'}</td><td class="num">${z.relatos??'—'}</td>
+    <td><button class="btn ghost sm" data-act="zoneDel" data-id="${esc(z.id)}">${z.tipo==='automatica'?'Dispensar':'Remover'}</button></td></tr>`).join('');
+  return `<div class="card"><p class="eyebrow">Zonas de sinal fraco</p><h3>Mapa de cobertura de internet</h3>
+    <p class="small muted">Áreas hachuradas no mapa. As automáticas surgem quando corridas relatam sinal fraco no mesmo quadrado de ${CELL_KM} km; a central também pode marcar áreas conhecidas. Corridas que passam por elas recebem alerta.</p>
+    <div class="field"><label for="zoneNote">Observação da nova zona</label><input id="zoneNote" placeholder="Ex.: túnel, área rural, subsolo"></div>
+    <div class="row"><label for="zoneRadius" class="small muted">Raio</label><select id="zoneRadius" style="font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px"><option value="5">5 km</option><option value="10" selected>10 km</option><option value="20">20 km</option></select>
+      <button class="btn ${S.markZone?'':'soft'} sm" data-act="zoneMark">${S.markZone?'Toque no mapa ao lado…':'Marcar zona no mapa'}</button></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>Tipo</th><th>Região</th><th>Nível</th><th>Relatos</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Nenhuma zona registrada.</td></tr>'}</tbody></table></div></div>`;
+}
+
+// ---------- pagamentos (Stripe Connect) ----------
+function loyalRow(){
+  const on=S.pass.loyal;
+  return `<div class="toggle"><button class="switch" role="switch" aria-checked="${on}" aria-label="Motora Fiel" data-act="loyal"></button><span>Motora Fiel <span class="small muted">${on?'ativo: 5% de desconto em km e tempo':'grátis: 5% de desconto em toda corrida (exceto bandeirada)'}</span></span></div>`;
+}
+function cardRow(){
+  const c=S.pass.card;
+  return c ? `<div class="row between small"><span>Pagamento: cartão ${esc(c.marca||'')} •••• ${esc(c.final||'')}${c.simulado?' <span class="chip">teste</span>':''}</span><button class="btn ghost sm" data-act="addCard">Trocar</button></div>`
+    : `<div class="alert info"><span>Adicione um cartão para pedir corridas. A cobrança é feita no fim da viagem.</span><button class="btn soft" data-act="addCard">Adicionar cartão</button></div>`;
+}
+function payoutRow(){
+  const u=S.drv;
+  if(u.payOk) return `<div class="row between small"><span class="chip ok">Recebimentos ativos</span><span class="muted">85% de cada corrida cai na sua conta Stripe.</span></div>`;
+  return `<div class="alert warn"><span>Conecte uma conta para receber. 85% de cada corrida vão direto para você; 15% ficam com a Motora.</span>
+    ${u.payUrl?`<a class="btn soft" style="text-align:center;text-decoration:none" href="${esc(u.payUrl)}" target="_blank" rel="noopener">Abrir cadastro bancário na Stripe</a><button class="btn ghost" data-act="payCheck">Já concluí, verificar</button>`
+      :`<button class="btn soft" data-act="payConnect">Conectar conta de recebimento</button>`}</div>`;
+}
+function payLines(r,who){
+  const pays = r.payments || [{motivo:'corrida', valor:r.final.total, taxa_motora:r.final.total-driverShare(r.final), repasse_motorista:driverShare(r.final), status:'pago'}];
+  const tot = pays.reduce((a,p)=>a+(p.status==='pago'?p.valor:0),0), rep_ = pays.reduce((a,p)=>a+(p.status==='pago'?p.repasse_motorista:0),0);
+  const falha = pays.find(p=>p.status==='falhou');
+  if(falha) return `<div class="alert bad"><span>A cobrança de ${brl(falha.valor)} não foi aprovada. ${who==='pass'?'Atualize seu cartão para concluir o pagamento.':'Avisamos a passageira; o repasse sai quando o pagamento for aprovado.'}</span></div>`;
+  return who==='pass'
+    ? `<p class="small muted">Pago ${brl(tot)} no cartão${S.pass.card?' •••• '+esc(S.pass.card.final):''}${pays.length>1?` (${pays.length} cobranças, incluindo a rota alternativa)`:''}.</p>`
+    : `<div class="fare small"><span>Repasse para sua conta (85% + R$ 3,00 de deslocamento)</span><span class="num">${brl(rep_)}</span><span class="muted">Parte da Motora (15%${r.final&&r.final.desconto>0.004?', menos o desconto Fiel':''})</span><span class="num muted">${brl(tot-rep_)}</span></div>`;
+}
+let stripeJs=null;
+function loadStripe(){ return stripeJs || (stripeJs=new Promise((ok,err)=>{ const sc=document.createElement('script'); sc.src='https://js.stripe.com/v3/'; sc.onload=()=>ok(window.Stripe); sc.onerror=err; document.head.appendChild(sc); })); }
+async function openStripeCard(j){
+  const box=document.getElementById('payModal');
+  box.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="cardT"><div class="card"><h2 id="cardT">Adicionar cartão</h2>
+    <div id="stripeEl"></div><p class="err" id="cardErr"></p>
+    <div class="btns"><button class="btn ghost" id="cardCancel">Cancelar</button><button class="btn" id="cardSave">Salvar cartão</button></div>
+    <p class="small muted">Pagamento processado pela Stripe. A Motora não vê nem guarda o número do cartão.</p></div></div>`;
+  document.getElementById('cardCancel').onclick=()=>{ box.innerHTML=''; };
+  try{
+    const Stripe=await loadStripe(), stripe=Stripe(j.publishable_key), elements=stripe.elements({clientSecret:j.client_secret,locale:'pt-BR'});
+    elements.create('payment').mount('#stripeEl');
+    document.getElementById('cardSave').onclick=async()=>{
+      const res=await stripe.confirmSetup({elements,redirect:'if_required'});
+      if(res.error){ document.getElementById('cardErr').textContent=res.error.message; return; }
+      try{ const c=await api('POST',`/api/passageiras/${S.pass.id}/cartao/confirmar`,{setup_intent_id:res.setupIntent.id}); S.pass.card=c.cartao; box.innerHTML=''; log('info','Cartão salvo na Stripe.'); render(); }
+      catch(e){ document.getElementById('cardErr').textContent=apiErr(e); }
+    };
+  }catch(_){ document.getElementById('cardErr').textContent='Não foi possível carregar a Stripe. Verifique a conexão.'; }
+}
+
+// compartilhar a rota pelo WhatsApp: o link abre a página de acompanhamento, que leva ao app de mapas do celular
+const MAPA_CENTRO={lat:-23.5505,lng:-46.6333}; // Praça da Sé, São Paulo (o mesmo padrão do servidor)
+function latlng(p){ const lat=MAPA_CENTRO.lat-(p.y-MAPKM/2)/110.574, lng=MAPA_CENTRO.lng+(p.x-MAPKM/2)/(111.320*Math.cos(MAPA_CENTRO.lat*Math.PI/180));
+  return {lat:+lat.toFixed(6),lng:+lng.toFixed(6)}; }
+const waTel = t => { let d=String(t||'').replace(/\D/g,''); if(d && !d.startsWith('55')) d='55'+d; return d.length>4?d:''; };
+function waInfo(){
+  const r=S.ride; if(!r) return null;
+  if(API.on && rid()){
+    if(!r.wa && !r.waPedido){ r.waPedido=true; sync('POST',`/api/corridas/${rid()}/compartilhar`,{},j=>{ r.wa=j; }); }
+    return r.wa||null; }
+  const c=S.pass.data, d=S.drv.data, g=latlng(carPos()||r.o);
+  const carro=['accepted','arrived','ontrip'].includes(r.status)?` com ${d.name} (${d.car} ${d.color}, placa ${d.plate})`:'';
+  const link=`https://www.google.com/maps/search/?api=1&query=${g.lat},${g.lng}`;
+  const texto=`Estou em uma corrida Motora${carro}. Veja minha localização no seu app de mapas: ${link}`, q=encodeURIComponent(texto), tel=waTel(c.emerPhone);
+  return {link,texto,whatsapp:`https://wa.me/?text=${q}`,whatsapp_contato:tel?`https://wa.me/${tel}?text=${q}`:null,contato:c.emerName};
+}
+function shareBtn(compact){
+  const w=waInfo();
+  if(!w) return `<button class="btn ghost" disabled>Preparando o link do WhatsApp…</button>`;
+  const principal=w.whatsapp_contato||w.whatsapp;
+  return `<div style="display:flex;flex-direction:column;gap:6px"><a class="btn wa" href="${esc(principal)}" target="_blank" rel="noopener" data-wa="contato">${S.shared?'✓ ':''}${compact?'WhatsApp':`Enviar rota pelo WhatsApp${w.whatsapp_contato&&w.contato?` para ${esc(String(w.contato).split(' ')[0])}`:''}`}</a>
+    ${compact?'':`<a class="small" style="text-align:center;color:var(--accent);font-weight:600" href="${esc(w.whatsapp)}" target="_blank" rel="noopener" data-wa="outro">Escolher outro contato no WhatsApp</a>`}</div>`; }
+// ---------- avaliação mútua, denúncias e bloqueio ----------
+const CRIT = {
+  pass:{conduta:'Conduta',tratamento:'Tratamento',respeito:'Respeito mútuo',conducao:'Condução do veículo',zelo_veiculo:'Zelo pelo veículo (limpeza e conservação)'},
+  drv:{conduta:'Conduta',tratamento:'Tratamento',respeito:'Respeito mútuo',zelo_veiculo:'Zelo pelo veículo (cuidado durante a corrida)'},
+};
+const OCORR = {assedio:'Assédio',desrespeito:'Desrespeito',imoralidade:'Imoralidade',humilhacao:'Humilhação',violencia_fisica:'Violência física',violencia_verbal:'Violência verbal'};
+const GRAVES = ['assedio','imoralidade','violencia_fisica'];
+S.reports = [];
+// ---------- dicas de bom convívio ----------
+const DICAS = [
+  'Use fones ou mantenha celulares e outros aparelhos com volume baixo.',
+  'Nada de conversas obscenas, gritaria ou palavrões.',
+  'Feche a porta com cuidado, sem bater, para não danificar o veículo.',
+  'Com o ar-condicionado ligado, mantenha os vidros fechados.',
+  'Não suje o veículo e leve seu lixo com você.',
+  'Não entre com bebidas no veículo.',
+  'Trate a outra pessoa com educação e respeito do início ao fim.',
+];
+const REGRA_LIMPEZA = 'Entrar no veículo com roupa molhada (ou sujá-lo) gera taxa de limpeza. O valor só é cobrado se for comprovado por fotos e pela nota fiscal do serviço de limpeza, depois da análise da central.';
+S.tipsOpen = {pass:false, drv:false};
+const RECOM_DRV = [
+  'Antes de sair, avise a passageira sobre os itens de segurança e peça que ela use o cinto. Use o seu também.',
+  'Com o ar-condicionado ligado, mantenha os vidros fechados.',
+  'Deixe o celular sempre carregado. Tenha um carregador no carro.',
+  'Mantenha o celular conectado ao Bluetooth do carro durante todo o trabalho. Se ele desconectar ou se afastar do carro, a Motora entende que houve uma mudança repentina e pergunta se está tudo bem. Sem resposta, a central é avisada.',
+  'Confira nome, foto e código de embarque antes de iniciar a corrida.',
+  'Não use o celular na mão enquanto dirige. Respeite os limites de velocidade.',
+];
+function tipsBox(who){
+  const open=S.tipsOpen[who], drv=who==='drv';
+  return `<div class="card" style="background:var(--bg);gap:8px"><div class="row between"><p class="eyebrow" style="margin:0">${drv?'Recomendações e dicas':'Dicas de bom convívio'}</p><button class="btn ghost sm" style="width:auto" data-act="tips" data-who="${who}" aria-expanded="${open}">${open?'Fechar':'Ver tudo'}</button></div>
+    ${open?`${drv?`<p class="small" style="margin:0"><strong>Recomendações para quem dirige</strong></p><ol class="tips">${RECOM_DRV.map(t=>`<li>${t}</li>`).join('')}</ol><p class="small" style="margin:0"><strong>Dicas de bom convívio</strong></p>`:''}<ol class="tips">${DICAS.map(t=>`<li>${t}</li>`).join('')}</ol><div class="alert warn small"><span>${REGRA_LIMPEZA}</span></div>`
+      :`<p class="small muted" style="margin:0">${drv?'Avise sobre o cinto, vidros fechados com ar ligado, celular carregado e no Bluetooth do carro. ':''}Volume baixo, respeito, sem bater porta, sem sujeira e sem bebidas.</p>`}</div>`;
+}
+
+// ---------- Socorro Motora: apoio da central (não é emergência; para perigo use o SOS) ----------
+const MOT_APOIO = {recusa_sair:'Pessoa se recusa a sair do veículo',discussao:'Discussão ou conflito',comportamento:'Comportamento inadequado',veiculo:'Problema no veículo',pneu:'Reparo no pneu',mecanico:'Socorro mecânico (pane ou guincho)',bateria:'Socorro de bateria (carga ou troca)',objeto:'Objeto esquecido',rota:'Dúvida sobre a rota ou o valor',outro:'Outro'};
+S.apoios = []; S.apoioForm = null;
+const apoioBtn = who => `<button class="btn apoio" data-act="apoioOpen" data-by="${who}">Socorro Motora · apoio da central</button>`;
+function apoioBanner(){
+  const r=S.ride, ap=r && S.apoios.find(a=>a.ride===r && a.status!=='encerrado');
+  if(!ap) return '';
+  return `<div class="alert ${ap.status==='aguardando'?'warn':'ok'}"><span>${ap.status==='aguardando'
+    ?`Socorro Motora: a central foi avisada (${esc(MOT_APOIO[ap.motivo])}) e vai entrar em contato.${['pneu','mecanico','bateria'].includes(ap.motivo)?' Ela aciona o parceiro credenciado mais perto (borracharia, bateria ou guincho) e, se a corrida não puder seguir, chama outro carro para a passageira sem custo extra.':''}`
+    :'Socorro Motora: a central está acompanhando esta corrida e falando com vocês.'}</span></div>`;
+}
+function apoioModal(){
+  const f=S.apoioForm; if(!f) return '';
+  return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="apT"><div class="card">
+    <p class="eyebrow">Socorro Motora</p><h2 id="apT">Pedir apoio da central</h2>
+    <p class="small muted">A central acompanha a corrida e entra em contato com vocês. Em perigo, use o botão SOS ou ligue 190.</p>
+    <div class="row" style="gap:6px">${Object.entries(MOT_APOIO).map(([k,l])=>`<button class="chip ${f.motivo===k?'hot':''}" aria-pressed="${f.motivo===k}" data-act="apoioMot" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="field"><label for="apoioDet">Detalhe (opcional)</label><input id="apoioDet" maxlength="500" placeholder="O que está acontecendo?"></div>
+    ${f.err?`<p class="err">${esc(f.err)}</p>`:''}
+    <div class="btns"><button class="btn ghost" data-act="apoioClose">Cancelar</button><button class="btn" data-act="apoioSend">Avisar a central</button></div></div></div>`;
+}
+function apoiosBox(){
+  const abertos=S.apoios.filter(a=>a.status!=='encerrado'); if(!abertos.length) return '';
+  return `<p class="eyebrow">Socorro Motora</p><div class="log">${abertos.map(a=>`<div class="desvio" style="flex-direction:column;gap:6px"><span><strong>${esc(MOT_APOIO[a.motivo])}</strong> · pedido ${a.by==='pass'?'pela passageira':dm().p+' motorista'} às ${a.t}</span>
+    ${a.det?`<span class="small" style="font-weight:500">“${esc(a.det)}”</span>`:''}
+    ${a.parceiro?`<span class="small" style="font-weight:500">Parceiro mais perto: ${esc(a.parceiro.nome)} (${fmtKm(a.parceiro.km)})</span>`:''}
+    <span class="row" style="gap:6px">${a.status==='aguardando'?`<button class="btn sm" style="width:auto" data-act="apoioAct" data-i="${a.i}" data-a="atender">Atender</button>`:'<span class="chip ok">Em atendimento</span>'}<button class="btn sm ghost" style="width:auto" data-act="apoioAct" data-i="${a.i}" data-a="encerrar">Encerrar</button></span></div>`).join('')}</div>`;
+}
+
+// ---------- taxa de limpeza (só com fotos + nota fiscal, aprovada pela central) ----------
+const MOT_LIMP = {roupa_molhada:'Entrou com roupa molhada',sujeira:'Sujou o veículo',bebida:'Bebida derramada',vomito:'Vômito',outro:'Outro'};
+const LIMP_MAX = 250;
+S.taxas = [];
+const taxaDe = r => S.taxas.find(t=>t.ride===r);
+const TAXA_ST = {em_analise:'Em análise pela central',cobrada:'Aprovada e cobrada',recusada:'Recusada pela central',cobranca_falhou:'Aprovada, mas a cobrança falhou'};
+function limpezaForm(r){
+  const t=taxaDe(r);
+  if(t) return `<div class="alert ${t.status==='cobrada'?'ok':t.status==='recusada'?'bad':'warn'}"><span>Taxa de limpeza de ${brl(t.valor)}: ${TAXA_ST[t.status]}.</span>
+    ${t.status==='cobrada'?'<span class="small">O valor vai 100% para você, sem taxa da Motora.</span>':''}${t.contest?'<span class="small">A passageira contestou o pedido.</span>':''}</div>`;
+  const f=r.limp;
+  if(!f) return `<button class="btn ghost" data-act="limpOpen">Pedir taxa de limpeza</button>`;
+  return `<div class="card" style="background:var(--bg)"><p class="eyebrow">Taxa de limpeza</p>
+    <p class="small muted">Só é cobrada com fotos do veículo e a nota fiscal do serviço de limpeza. A central analisa antes de cobrar, e a passageira pode contestar. Prazo: 48 horas.</p>
+    <div class="field"><label for="limpMot">Motivo</label><select id="limpMot">${Object.entries(MOT_LIMP).map(([k,l])=>`<option value="${k}" ${f.motivo===k?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="grid2"><div class="field"><label for="limpValor">Valor da limpeza (até ${brl(LIMP_MAX)})</label><input id="limpValor" type="number" min="1" max="${LIMP_MAX}" step="0.01" inputmode="decimal"></div>
+      <div class="field"><label for="limpNf">Nº da nota fiscal</label><input id="limpNf" maxlength="60"></div></div>
+    <div class="field"><label for="limpFotos">Fotos do veículo (1 a 4)</label><input id="limpFotos" type="file" accept="image/*" multiple data-limp="fotos"></div>
+    ${f.fotos.length?`<div class="thumbs">${f.fotos.map(src=>`<img src="${src}" alt="Foto do veículo">`).join('')}</div>`:''}
+    <div class="field"><label for="limpNfArq">Nota fiscal do serviço de limpeza (foto ou PDF)</label><input id="limpNfArq" type="file" accept="image/*,application/pdf" data-limp="nf"></div>
+    ${f.nf?`<p class="small muted">Nota fiscal anexada${f.nf.startsWith('data:application/pdf')?' (PDF)':''}.</p>`:''}
+    <div class="field"><label for="limpDesc">Descrição (opcional)</label><input id="limpDesc" maxlength="500"></div>
+    ${f.err?`<p class="err">${esc(f.err)}</p>`:''}
+    <div class="btns"><button class="btn ghost" data-act="limpClose">Cancelar</button><button class="btn" data-act="limpSend">Enviar para análise</button></div></div>`;
+}
+function taxaPass(){
+  return S.taxas.filter(t=>t.status==='em_analise' || !t.vistoPass).map(t=>{
+    if(t.status!=='em_analise') return `<div class="alert ${t.status==='recusada'?'ok':'warn'}"><span>${t.status==='recusada'?`A central recusou a taxa de limpeza de ${brl(t.valor)}. Nada será cobrado.`:`A taxa de limpeza de ${brl(t.valor)} foi aprovada pela central e cobrada no seu cartão.`}</span><button class="btn sm ghost" style="width:auto" data-act="taxaOk" data-i="${t.i}">Entendi</button></div>`;
+    return `<div class="alert warn"><span>${esc(S.drv.data.name)} pediu uma taxa de limpeza de ${brl(t.valor)} (${esc(MOT_LIMP[t.motivo])}), com ${t.fotos.length} foto(s) e nota fiscal nº ${esc(t.numero)}. Só será cobrada se a central aprovar.</span>
+      ${t.contest?'<span class="small">Sua contestação foi enviada à central.</span>':`<div class="field"><label for="limpCont">Não concorda? Explique (a central lê antes de decidir)</label><input id="limpCont" maxlength="500"></div><button class="btn sm soft" data-act="limpContest" data-i="${t.i}">Contestar</button>`}</div>`;
+  }).join('');
+}
+function taxasBox(){
+  const pend=S.taxas.filter(t=>t.status==='em_analise'); if(!pend.length) return '';
+  return `<p class="eyebrow">Taxas de limpeza</p><div class="log">${pend.map(t=>`<div style="flex-direction:column;gap:6px;align-items:stretch"><span><strong>${brl(t.valor)}</strong> · ${esc(MOT_LIMP[t.motivo])} · NF ${esc(t.numero)}</span>
+    ${t.desc?`<span class="small" style="font-weight:500">“${esc(t.desc)}”</span>`:''}
+    <div class="thumbs">${t.fotos.map(src=>`<img src="${src}" alt="Foto enviada">`).join('')}${t.nf.startsWith('data:image')?`<img src="${t.nf}" alt="Nota fiscal">`:'<span class="chip">NF em PDF</span>'}</div>
+    ${t.contest?`<span class="small" style="color:var(--warn)">Contestação da passageira: “${esc(t.contest)}”</span>`:''}
+    <span class="row" style="gap:6px"><button class="btn sm" style="width:auto" data-act="taxaDecide" data-i="${t.i}" data-ok="1">Aprovar e cobrar</button><button class="btn sm ghost" style="width:auto" data-act="taxaDecide" data-i="${t.i}" data-ok="0">Recusar</button></span></div>`).join('')}</div>`;
+}
+// ---------- reclamações à central (regras e objetos esquecidos) ----------
+const RECL_CAT = {
+  pass:{objeto_esquecido:'Esqueci um objeto no carro',conduta:'Conduta de quem dirigiu',direcao:'Direção perigosa ou desrespeito às leis de trânsito',veiculo:'Veículo diferente do cadastro, sujo ou em más condições',cobranca:'Rota ou cobrança',regras:'Outro descumprimento das regras do app',outro:'Outro assunto'},
+  drv:{objeto_encontrado:'Objeto esquecido no carro',conduta:'Conduta da passageira',veiculo:'Dano ao veículo',cobranca:'Rota ou cobrança',regras:'Outro descumprimento das regras do app',outro:'Outro assunto'}};
+const RECL_ST = {aberta:'Aberta',em_andamento:'Em andamento',objeto_encontrado:'Objeto encontrado',objeto_nao_encontrado:'Objeto não encontrado',entregue:'Objeto entregue',resolvida:'Resolvida'};
+const RECL_FIM = ['objeto_nao_encontrado','entregue','resolvida'];
+const ENTREGA = {base:30,kmBase:15,porKm:1,max:50};
+const AVISO_OBJ = 'A Motora não se responsabiliza por objetos esquecidos ou perdidos no veículo. Se o objeto for encontrado, a entrega custa R$ 30,00 até 15 km e até R$ 50,00 acima disso.';
+const taxaEntrega = km => km<=ENTREGA.kmBase ? ENTREGA.base : Math.round(Math.min(ENTREGA.max, ENTREGA.base+(km-ENTREGA.kmBase)*ENTREGA.porKm)*100)/100;
+S.recl = []; S.reclF = {pass:null,drv:null}; S.rideHist = [];
+const isObj = c => c==='objeto_esquecido'||c==='objeto_encontrado';
+function reclRides(){ const rs=[...S.rideHist]; if(S.ride && !rs.includes(S.ride) && S.ride.status!=='searching') rs.unshift(S.ride); return rs.slice(0,5); }
+const rideNome = (r,k) => `${k===0&&r===S.ride&&r.status!=='done'?'Corrida atual':'Corrida'} das ${r.t0||''} · ${regionOf(r.o)} → ${regionOf(r.d)}`;
+function entregaInfo(r,modo){ if(!r||modo==='retirar') return null; const km=Math.round(dist(r.d, modo==='destino'?r.d:r.o)*10)/10; return {km,taxa:taxaEntrega(km)}; }
+function reclCard(who){
+  const f=S.reclF[who], meus=S.recl.filter(x=>x.who===who), rides=reclRides(), u=who==='pass'?S.pass:S.drv;
+  const lista = meus.length ? `<div class="log">${meus.map(x=>`<div style="flex-direction:column;gap:4px;align-items:stretch">
+      <span class="row between"><strong class="small">${esc(x.protocolo)} · ${esc(RECL_CAT[who][x.cat])}</strong><span class="chip ${RECL_FIM.includes(x.status)?'ok':'hot'}">${RECL_ST[x.status]}</span></span>
+      ${x.obj?`<span class="small">Objeto: ${esc(x.obj.descricao)}${x.obj.taxa?` · entrega ${brl(x.obj.taxa)} (${fmtKm(x.obj.km)})`:x.obj.entrega==='retirar'&&who==='pass'?' · retirada combinada com a central, sem custo':''}</span>`:''}
+      ${x.resposta?`<span class="small" style="font-weight:500">Central: “${esc(x.resposta)}”</span>`:''}</div>`).join('')}</div>` : '';
+  if(!f) return `<div class="card"><div class="row between"><p class="eyebrow" style="margin:0">Reclamações</p><button class="btn ghost sm" style="width:auto" data-act="reclOpen" data-who="${who}">Abrir reclamação</button></div>
+    <p class="small muted" style="margin:0">Relate à central qualquer descumprimento das regras ${who==='pass'?'por quem dirigiu':'pela passageira'}${who==='pass'?' ou um objeto esquecido no carro':' ou um objeto esquecido no seu carro'}.</p>${lista}</div>`;
+  const r=rides[f.ride]||null, ent=who==='pass'&&isObj(f.cat)?entregaInfo(r,f.entrega):null;
+  return `<div class="card"><p class="eyebrow">Nova reclamação</p>
+    <div class="field"><label for="reclCat-${who}">Assunto</label><select id="reclCat-${who}" data-recl="cat" data-who="${who}">${Object.entries(RECL_CAT[who]).map(([k,l])=>`<option value="${k}" ${f.cat===k?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label for="reclRide-${who}">Corrida</label><select id="reclRide-${who}" data-recl="ride" data-who="${who}">${rides.map((x,k)=>`<option value="${k}" ${f.ride===k?'selected':''}>${esc(rideNome(x,k))}</option>`).join('')}<option value="-1" ${f.ride===-1?'selected':''}>Não é sobre uma corrida</option></select></div>
+    ${isObj(f.cat)?`<div class="alert warn"><span>${AVISO_OBJ}</span></div>
+      <div class="field"><label for="reclObj-${who}">Qual objeto?</label><input id="reclObj-${who}" maxlength="200" placeholder="Ex.: guarda-chuva preto"></div>
+      ${who==='pass'?`<div class="field"><label for="reclEnt">Como quer receber, se for encontrado?</label><select id="reclEnt" data-recl="entrega" data-who="pass">
+        <option value="retirar" ${f.entrega==='retirar'?'selected':''}>Vou retirar combinando com a central (sem custo)</option>
+        <option value="destino" ${f.entrega==='destino'?'selected':''}>Entrega no destino da corrida</option>
+        <option value="embarque" ${f.entrega==='embarque'?'selected':''}>Entrega no ponto de embarque</option></select></div>
+        ${ent?`<div class="row between"><span>Taxa de entrega (${fmtKm(ent.km)})</span><span class="num" style="font-weight:700">${brl(ent.taxa)}</span></div><p class="small muted" style="margin:0">Cobrada no seu cartão só quando o objeto for entregue. O valor vai 100% para quem dirige.</p>`:''}`
+      :'<p class="small muted" style="margin:0">A central avisa a passageira e combina a devolução. Guarde o objeto em segurança.</p>'}`:''}
+    <div class="field"><label for="reclDesc-${who}">O que aconteceu?</label><textarea id="reclDesc-${who}" maxlength="1000" rows="3" placeholder="Conte com detalhes: quando, onde e o que aconteceu"></textarea></div>
+    ${f.err?`<p class="err">${esc(f.err)}</p>`:''}
+    <div class="btns"><button class="btn ghost" data-act="reclClose" data-who="${who}">Cancelar</button><button class="btn" data-act="reclSend" data-who="${who}">Enviar à central</button></div>${lista}</div>`;
+}
+function reclBox(){
+  const abertas=S.recl.filter(x=>!RECL_FIM.includes(x.status)); if(!abertas.length) return '';
+  return `<p class="eyebrow">Reclamações</p><div class="log">${abertas.map(x=>`<div style="flex-direction:column;gap:6px;align-items:stretch">
+    <span><strong>${esc(x.protocolo)}</strong> · ${esc(RECL_CAT[x.who][x.cat])} · por ${esc(x.nome)} (${x.who==='pass'?'passageira':'motorista'}) · <span class="chip">${RECL_ST[x.status]}</span></span>
+    <span class="small" style="font-weight:500">“${esc(x.desc)}”</span>
+    ${x.obj?`<span class="small">Objeto: ${esc(x.obj.descricao)} · ${x.obj.taxa?`entrega ${brl(x.obj.taxa)} (${fmtKm(x.obj.km)})`:'retirada, sem custo'}</span>`:''}
+    <input id="reclResp-${x.i}" maxlength="500" placeholder="Resposta para quem reclamou (opcional)" aria-label="Resposta da central">
+    <span class="row" style="gap:6px;flex-wrap:wrap">${x.obj?(x.status==='objeto_encontrado'
+        ?`<button class="btn sm" style="width:auto" data-act="reclAnd" data-i="${x.i}" data-s="entregue">${x.obj.taxa?`Entregue · cobrar ${brl(x.obj.taxa)}`:'Devolvido'}</button>`
+        :`<button class="btn sm" style="width:auto" data-act="reclAnd" data-i="${x.i}" data-s="objeto_encontrado">Objeto encontrado</button><button class="btn sm ghost" style="width:auto" data-act="reclAnd" data-i="${x.i}" data-s="objeto_nao_encontrado">Não encontrado</button>`)
+      :`${x.status==='aberta'?`<button class="btn sm ghost" style="width:auto" data-act="reclAnd" data-i="${x.i}" data-s="em_andamento">Em andamento</button>`:''}<button class="btn sm" style="width:auto" data-act="reclAnd" data-i="${x.i}" data-s="resolvida">Resolver</button>`}</span></div>`).join('')}</div>`;
+}
+// ---------- alertas de trânsito de quem dirige ----------
+function ocorrCard(compact){
+  const meus=S.ocorr.filter(o=>o.porDrv).slice(0,3);
+  return `<div class="card" style="${compact?'background:var(--bg);':''}gap:8px"><p class="eyebrow" style="margin:0">Alertar a central</p>
+    ${compact?'':'<p class="small muted" style="margin:0">Avise sobre o que está vendo no trânsito, no ponto onde você está. As rotas de todos passam a desviar de acidentes, obras e engarrafamentos.</p>'}
+    <div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(OC_TIPO).map(([k,t])=>`<button class="chip" data-act="ocReport" data-t="${k}">${t.ic} ${t.n}</button>`).join('')}</div>
+    ${compact?'':`<input id="ocObs" maxlength="200" placeholder="Detalhe (opcional), ex.: pista da direita fechada" aria-label="Detalhe do alerta">`}
+    ${meus.length&&!compact?`<div class="log">${meus.map(o=>`<div><span class="small">${OC_TIPO[o.tipo].ic} ${OC_TIPO[o.tipo].n} em ${regionOf(o)}${o.obs?` · ${esc(o.obs)}`:''} · enviado às ${o.t}</span></div>`).join('')}</div>`:''}</div>`;
+}
+function ocorrCentral(){
+  const oc=ocAtivas();
+  return `<div class="card"><p class="eyebrow">Trânsito</p><h3>Ocorrências avisadas</h3>
+    <p class="small muted">Acidente +15 min, obra +10 min e engarrafamento +20 min para quem passa a até 1 km. Policiamento e blitz aparecem como aviso. A melhor rota de cada corrida desvia pelo menor tempo.</p>
+    ${oc.length?`<div class="log">${oc.map(o=>`<div class="row between" style="gap:6px"><span class="small">${OC_TIPO[o.tipo].ic} <strong>${OC_TIPO[o.tipo].n}</strong> em ${regionOf(o)} · ${esc(o.por)}${o.obs?` · ${esc(o.obs)}`:''}</span><button class="btn sm ghost" style="width:auto" data-act="ocDel" data-id="${esc(o.id)}">Remover</button></div>`).join('')}</div>`:'<p class="muted small">Nenhuma ocorrência ativa.</p>'}</div>`;
+}
+// ---------- motoristas favoritas ----------
+S.pass.favs = []; S.favFirst = false;
+const isFav = () => S.pass.favs.includes('drv');
+function favRow(r){ // depois da avaliação da passageira
+  const v=rv(r,'pass'); if(!v.sent || blockedPair()) return '';
+  if(isFav()) return `<div class="alert ok small"><span>★ ${esc(S.drv.data.name)} está nos seus favoritos.</span></div>`;
+  return v.notas.conduta===5
+    ? `<button class="btn soft" data-act="favAdd">★ Marcar ${esc(S.drv.data.name.split(' ')[0])} como favorit${dm().a}</button>`
+    : `<p class="small muted">Para marcar como favorit${dm().a}, a conduta precisa ter 5 estrelas na sua avaliação.</p>`;
+}
+function favCardPass(){
+  if(!S.pass.favs.length) return '';
+  return `<div class="card"><p class="eyebrow">Motoristas favoritas</p><div class="row between"><span>★ ${esc(S.drv.data.name)} <span class="small muted">· ${esc(S.drv.data.car)} ${esc(S.drv.data.color)}</span></span><button class="btn sm ghost" style="width:auto" data-act="favDel" data-by="pass">Excluir</button></div>
+    <p class="small muted" style="margin:0">Escolhida por excelência na conduta. Você pode chamar suas favoritas primeiro ou agendar com elas.</p></div>`;
+}
+function favCardDrv(){
+  if(!isFav()) return '';
+  return `<div class="card"><p class="eyebrow">Você é favorit${dm().a}</p><div class="row between"><span>★ ${esc(S.pass.data.name.split(' ')[0])} marcou você como favorit${dm().a}.</span><button class="btn sm ghost" style="width:auto" data-act="favDel" data-by="drv">Excluir</button></div>
+    <p class="small muted" style="margin:0">Você recebe as chamadas dela primeiro. Se preferir, pode sair dos favoritos.</p></div>`;
+}
+const favRowReq = () => S.pass.favs.length ? `<div class="toggle"><button class="switch" role="switch" aria-checked="${S.favFirst}" aria-label="Chamar minhas favoritas primeiro" data-act="favFirst"></button><span>Chamar minhas favoritas primeiro <span class="small muted">(1 min só para elas)</span></span></div>` : '';
+// ---------- corridas agendadas ----------
+const AG_MIN_SEG = 30*60, AG_MAX_DIAS = 7, AG_MARGEM_SEG = 10*60;
+S.ags = []; S.agMode = 'agora';
+const agTxt = ts => new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const localISO = ts => { const d=new Date(ts-new Date().getTimezoneOffset()*6e4); return d.toISOString().slice(0,16); };
+function agPrazo(a){ // tempos em segundos do relógio da simulação
+  const falta=a.alvo-S.simT, br=bestRoute(S.drv.pos,a.o), desloc=br.min*60, sair=falta-desloc-AG_MARGEM_SEG;
+  return {falta,desloc,sair,br,alerta: falta<desloc?'atrasado':sair<=0?'hora_de_sair':'no_prazo'};
+}
+const minTxt = s => s<=0 ? 'agora' : s<3600 ? `${Math.ceil(s/60)} min` : `${Math.floor(s/3600)} h ${String(Math.ceil(s%3600/60)).padStart(2,'0')}`;
+function agForm(e){
+  const min=localISO(Date.now()+AG_MIN_SEG*1000+60000);
+  return `<div class="field"><label for="agWhen">Data e horário do embarque</label><input id="agWhen" type="datetime-local" min="${min}" max="${localISO(Date.now()+AG_MAX_DIAS*864e5)}" value="${S.agWhenV||localISO(Date.now()+3600e3)}"></div>
+    ${S.pass.favs.length?`<div class="field"><label for="agFav">Motorista</label><select id="agFav"><option value="">Qualquer motorista</option><option value="drv">★ ${esc(S.drv.data.name)} (favorit${dm().a})</option></select></div>`:''}
+    <p class="small muted" style="margin:0">De 30 minutos a 7 dias de antecedência. O valor é recalculado no embarque pela melhor rota do momento. Cancelar é grátis até a pessoa motorista sair para te buscar.</p>
+    ${S.agErr?`<p class="err">${esc(S.agErr)}</p>`:''}`;
+}
+const AG_ST = {aberta:'Aguardando motorista',confirmada:'Confirmada',iniciada:'Motorista a caminho',cancelada:'Cancelada'};
+function agCardPass(){
+  const l=S.ags.filter(a=>a.status==='aberta'||a.status==='confirmada'); if(!l.length) return '';
+  return `<div class="card"><p class="eyebrow">Corridas agendadas</p><div class="log">${l.map(a=>`<div style="flex-direction:column;gap:4px;align-items:stretch">
+    <span class="row between"><strong class="small">${agTxt(a.when)} · ${regionOf(a.o)} → ${regionOf(a.d)}</strong><span class="chip ${a.status==='confirmada'?'ok':'hot'}">${AG_ST[a.status]}</span></span>
+    <span class="small">${fmtKm(a.km)} · estimativa ${brl(a.f0.total)}${a.status==='confirmada'?` · com ${esc(S.drv.data.name)}`:a.fav?` · só ${esc(S.drv.data.name.split(' ')[0])} (favorit${dm().a})`:''}</span>
+    ${a.late?`<span class="small" style="color:var(--warn);font-weight:600">${dm().A} motorista pode se atrasar. A central está acompanhando.</span>`:''}
+    <button class="btn sm ghost" style="width:auto;align-self:flex-start" data-act="agCancel" data-i="${a.i}">Cancelar agendamento</button></div>`).join('')}</div></div>`;
+}
+function agCardDrv(){
+  const abertas=S.ags.filter(a=>a.status==='aberta' && !a.recusou), minhas=S.ags.filter(a=>a.status==='confirmada');
+  if(!abertas.length && !minhas.length) return '';
+  const busy=S.ride && ['accepted','arrived','ontrip'].includes(S.ride.status);
+  return `<div class="card"><p class="eyebrow">Corridas agendadas</p>
+    ${minhas.map(a=>{ const p=agPrazo(a), cls=p.alerta==='atrasado'?'bad':p.alerta==='hora_de_sair'?'warn':'info';
+      return `<div class="card" style="background:var(--bg);gap:6px"><span class="row between"><strong>Embarque ${agTxt(a.when)}</strong><span class="chip ok">Confirmada</span></span>
+        <span class="small">${esc(S.pass.data.name.split(' ')[0])} · ${regionOf(a.o)} → ${regionOf(a.d)} · ${fmtKm(a.km)}</span>
+        <div class="alert ${cls} small"><span>${p.alerta==='atrasado'?`Atenção: você não chega a tempo. São ${minTxt(p.desloc)} até o embarque e faltam ${minTxt(p.falta)}. A central foi avisada.`
+          :p.alerta==='hora_de_sair'?`Hora de sair! São ${minTxt(p.desloc)} até o embarque, e o ideal é chegar 10 min antes.`
+          :`Saia em ${minTxt(p.sair)} para chegar com 10 min de folga (${minTxt(p.desloc)} de deslocamento).`}</span></div>
+        ${p.br.atraso?`<div class="alert warn small"><span>Trânsito até o embarque: +${p.br.atraso} min. Saia mais cedo.</span></div>`:''}${routeObsBox(p.br.obs)}
+        <div class="btns"><button class="btn ghost sm" data-act="agDesistir" data-i="${a.i}">Desistir</button><button class="btn sm" data-act="agGo" data-i="${a.i}" ${busy?'disabled':''}>Sair para o embarque</button></div>
+        ${p.alerta==='no_prazo'?`<button class="btn ghost sm" data-act="agDemo" data-i="${a.i}">Demo: adiantar até a hora de sair</button>`:''}</div>`; }).join('')}
+    ${abertas.map(a=>`<div class="row between" style="gap:6px"><span class="small"><strong>${agTxt(a.when)}</strong> · ${regionOf(a.o)} → ${regionOf(a.d)} · ${fmtKm(a.km)} · ${brl(driverShare(a.f0))}${a.fav?' · ★ pediu você':''}</span><button class="btn sm" style="width:auto" data-act="agAccept" data-i="${a.i}">Aceitar</button></div>`).join('')}</div>`;
+}
+function agTick(){ // alertas de prazo para quem dirige
+  for(const a of S.ags.filter(x=>x.status==='confirmada')){
+    const p=agPrazo(a);
+    if(p.alerta!=='no_prazo' && !a.alertSaida){ a.alertSaida=true; try{ navigator.vibrate&&navigator.vibrate([300,150,300]); }catch(_){}
+      log('info',`Hora de ${S.drv.data.name} sair para a corrida agendada de ${agTxt(a.when)} (${minTxt(p.desloc)} até o embarque${p.br.atraso?`, +${p.br.atraso} min de trânsito`:''}).`); render(); }
+    if(p.alerta==='atrasado' && !a.late){ a.late=true; log('desvio',`${S.drv.data.name} não vai chegar a tempo na corrida agendada de ${agTxt(a.when)}. Central deve acompanhar.`);
+      if(a.sid) sync('GET',`/api/corridas/${a.sid}/prazo?x=${S.drv.pos.x}&y=${S.drv.pos.y}`); render(); }
+  }
+}
+// ---------- resumo das regras (o mesmo de GET /api/regras/resumo) ----------
+const RESUMO = [["Corrida", ["Passageiras: só mulheres, 18+", "Motorista: homem ou mulher; opção \"prefiro mulher\"", "Frota: só elétricos e híbridos", "Máximo: 100 km por corrida", "Rota: sempre a melhor, desviando de acidente, obra e engarrafamento", "Agendamento: de 30 min a 7 dias antes", "Favoritas: 5★ em conduta; os dois podem excluir"]], ["Chamadas", ["Oferta: 20 s por motorista, até 3 vezes", "Poucas motoristas: chamada concentrada em quem está disponível", "Embarque: até 6 km da motorista (ignorado com poucas por perto)", "Área de atuação: 15 km em linha reta do bairro ou endereço"]], ["Tarifa", ["R$ 4 + R$ 2,20/km + R$ 0,40/min", "Deslocamento: R$ 3 fixo, 100% motorista", "Mínima: R$ 8", "Noturno: +20% (22h–6h)", "Dinâmica: 8 níveis, até 2,4x", "Espera: 2 min grátis no embarque, 1 min por parada; depois R$ 0,60/min", "Porta-malas: 3+ volumes, +3% a +10%", "Divisão: 85% motorista, 15% Motora", "Motora Fiel: −5% em km e tempo", "Rota alternativa: só com aceite e pagamento antes"]], ["Cancelamento e taxas", ["Grátis até 3 min; depois R$ 5 + R$ 2,20/km, até R$ 20", "Sinal fraco: taxa vai para análise da central", "Motorista que cancela: −2% na nota a cada 10 em 100, até 10%", "Limpeza: até R$ 250, com fotos e nota fiscal", "Objeto esquecido: sem responsabilidade da Motora; entrega R$ 30 até 15 km, até R$ 50"]], ["Segurança", ["SOS: 5 s para cancelar; avisa central e contato", "Rota no WhatsApp; link só durante a corrida", "Desvio acima de 1 km: alerta", "Parada longa: pergunta após 10 min; sem resposta em 60 s, central", "Modo assalto: alerta silencioso", "Bluetooth: aviso ao iniciar; desconexão alerta a central", "Prova de vida: selfie a cada saída, vale 60 a 15 min", "Chat: só durante a corrida, telefone oculto", "Denúncia grave: suspende a conta", "Reclamações: protocolo e resposta da central"]], ["Motorista", ["Jornada: máx. 12 h, depois 6 h de descanso", "CNH e CRLV: aviso 30 dias antes; vencido bloqueia", "Motora Verde: 5% a 15% em postos limpos, nota 4★+", "Alertas de trânsito: acidente, obra, engarrafamento, policiamento, blitz"]]];
+S.resumoOpen = {};
+function resumoCard(who){
+  const open=S.resumoOpen[who];
+  return `<div class="card"><div class="row between"><p class="eyebrow" style="margin:0">Resumo das regras</p><button class="btn ghost sm" style="width:auto" data-act="resumo" data-who="${who}">${open?'Fechar':'Ver todas'}</button></div>
+    ${open?RESUMO.map(([t,l])=>`<div><p class="small" style="margin:6px 0 4px;font-weight:700">${t}</p><ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')
+      :'<p class="small muted" style="margin:0">Todas as regras do app em poucas palavras: corrida, chamadas, tarifa, cancelamento, segurança e motorista.</p>'}</div>`;
+}
+// ---------- área de atuação e regras das chamadas ----------
+const AREA_KM = 15, CH = {seg:20, max:3, km:6, poucos:2};
+const BAIRROS = {"Centro (Sé)":[120,120],"Santana":[121,113],"Lapa":[112,115],"Pinheiros":[114,122],"Butantã":[111,124],"Vila Mariana":[122,126],"Moema":[119,128],"Santo Amaro":[113,133],"Ipiranga":[125,126],"Mooca":[124,121],"Tatuapé":[128,119],"Penha":[132,117],"Itaquera":[140,119],"Guarulhos":[135,106],"Osasco":[103,119],"São Bernardo do Campo":[128,139]};
+const reta = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+S.drv.area = null; S.markArea = false; S.demoPerto = null;
+const naArea = p => !S.drv.area || reta(S.drv.area,p) <= AREA_KM;
+// no mapa simulado (240 km de lado) quase nunca há 2 motoristas a até 6 km; a central pode simular mais
+const pertoEmbarque = r => S.demoPerto ?? Math.round(((S.regions[r.region]||{}).drivers||0) * Math.PI*CH.km*CH.km/14400);
+function offerInfo(r){
+  const km=reta(S.drv.pos,r.o), perto=pertoEmbarque(r), poucas=perto<CH.poucos;
+  return {km, perto, poucas, area:naArea(r.o), dentro6: km<=CH.km || poucas, ignorou6: km>CH.km && poucas};
+}
+const offerEleg = r => { const i=offerInfo(r); return i.area && i.dentro6; };
+function offerStart(r){ const i=offerInfo(r); r.offer={vez:1, ate:Date.now()+CH.seg*1000, conc:i.poucas, away:false}; }
+const offerMine = r => r.offer && !r.offer.away && offerEleg(r);
+function offerNext(r, motivo){
+  const o=r.offer, i=offerInfo(r), now=Date.now();
+  if(o.away){ // voltou de outras motoristas
+    r.offer = o.final ? {vez:o.vez+1, ate:now+CH.seg*1000, conc:true, away:false} : {vez:o.vez+1, ate:now+CH.seg*1000, conc:false, away:false};
+    if(o.final) log('info',`Todas as motoristas perto já receberam a chamada ${CH.max} vezes: a chamada se concentra em ${S.drv.data.name}.`);
+  } else if(i.poucas || o.conc){ r.offer={vez:o.vez+1, ate:now+CH.seg*1000, conc:true, away:false};
+    log('info',`Poucas motoristas disponíveis perto do embarque: chamada repetida para ${S.drv.data.name} (${o.vez+1}ª vez).`);
+  } else { r.offer={vez:o.vez, ate:now+CH.seg*1000, away:true, final:o.vez>=CH.max};
+    log('info',`${S.drv.data.name} ${motivo==='recusa'?'recusou':'não aceitou em 20 s'}. Chamada passou para outra pessoa motorista${o.vez>=CH.max?` (já recebeu ${CH.max} vezes)`:''}.`); }
+}
+function offerTick(){
+  const r=S.ride; if(!r || r.status!=='searching') return;
+  if(!r.offer){ if(offerEleg(r)) offerStart(r); return; }
+  if(Date.now()>=r.offer.ate){ offerNext(r,'tempo'); render(); }
+  else if(S.view==='drv') render();
+}
+function offerBox(r){
+  const o=r.offer, i=offerInfo(r), s=Math.max(0,Math.ceil((o.ate-Date.now())/1000));
+  return `<div class="row between"><span class="chip ${s<=5?'bad':'hot'}">Aceite em ${s} s</span><span class="small muted">${o.conc?'Chamada concentrada em você (poucas motoristas)':`Chamada ${o.vez} de ${CH.max}`}</span></div>
+    <span class="small">Embarque a ${fmtKm(i.km)} em linha reta${i.ignorou6?`. Acima de ${CH.km} km porque há poucas motoristas perto (${i.perto})`:''}.</span>`;
+}
+function areaCard(){
+  const a=S.drv.area;
+  return `<div class="card"><p class="eyebrow">Área de atuação</p>
+    ${a?`<div class="row between"><span>Até ${AREA_KM} km em linha reta de <strong>${esc(a.nome)}</strong></span><button class="btn sm ghost" style="width:auto" data-act="areaDel">Toda a cidade</button></div>`
+      :`<p class="small muted" style="margin:0">Você recebe chamadas de toda a cidade. Escolha um bairro ou marque um endereço para receber só embarques a até ${AREA_KM} km em linha reta.</p>`}
+    <div class="grid2"><div class="field"><label for="areaBairro">Bairro</label><select id="areaBairro"><option value="">Escolha</option>${Object.keys(BAIRROS).map(b=>`<option ${a&&a.nome===b?'selected':''}>${b}</option>`).join('')}</select></div>
+      <div class="field"><label for="areaEnd">ou endereço</label><input id="areaEnd" maxlength="120" placeholder="Rua, número"></div></div>
+    <div class="btns"><button class="btn sm" data-act="areaSet">Usar bairro</button><button class="btn sm ghost" data-act="areaMark" aria-pressed="${S.markArea}">${S.markArea?'Toque no mapa…':'Marcar endereço no mapa'}</button></div>
+    <p class="small muted" style="margin:0">A distância é medida em linha reta, sem contar o caminho pelas ruas.</p></div>`;
+}
+const areaSvg = () => S.drv.area ? `<circle cx="${S.drv.area.x*K}" cy="${S.drv.area.y*K}" r="${AREA_KM*K}" fill="var(--ok)" fill-opacity=".08" stroke="var(--ok)" stroke-width="1.5" stroke-dasharray="4 3"/>` : '';
+function chamadasCentral(){
+  const r=S.ride;
+  return `<div class="card"><p class="eyebrow">Chamadas</p><h3>Regras de despacho</h3>
+    <p class="small muted">Cada chamada fica 20 s com uma motorista e passa para a próxima; cada uma recebe até 3 vezes. Embarque a até 6 km, salvo com menos de 2 motoristas nesse raio. Com poucas motoristas, a chamada se concentra em quem está disponível.</p>
+    ${r&&r.status==='searching'&&r.offer?`<p class="small"><strong>Agora:</strong> ${r.offer.away?'com outra motorista':`com ${esc(S.drv.data.name)} (${r.offer.conc?'concentrada':`${r.offer.vez}ª de ${CH.max}`})`}, ${pertoEmbarque(r)} motorista(s) a até 6 km.</p>`:''}
+    <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small">Demo: motoristas a até 6 km do embarque</span>${[null,0,5].map(v=>`<button class="chip" data-act="demoPerto" data-v="${v}" aria-pressed="${S.demoPerto===v}">${v===null?'pelo mapa':v}</button>`).join('')}</div></div>`;
+}
+const blockedPair = () => (S.pass.blocked||[]).includes('drv') || (S.drv.blocked||[]).includes('pass');
+function rv(r,who){ r.rv=r.rv||{}; return r.rv[who]=r.rv[who]||{notas:{},ocorr:[],block:false,sent:false,err:''}; }
+function reviewForm(r,who){
+  const v=rv(r,who), alvo = who==='pass' ? `${dm().a} motorista` : 'a passageira';
+  if(v.sent) return `<div class="alert ${v.ocorr.length?'warn':'ok'}"><span>Avaliação enviada. Obrigado!</span>
+    ${v.ocorr.length?`<span class="small">Sua denúncia (${v.ocorr.map(o=>OCORR[o]).join(', ')}) foi enviada à central de segurança${v.ocorr.some(o=>GRAVES.includes(o))?' e a conta denunciada foi suspensa até a análise':''}. Em perigo, ligue 190. Central de Atendimento à Mulher: 180.</span>`:''}
+    ${v.block?`<span class="small">Você bloqueou ${alvo}. Vocês não serão mais pareados.</span>`:''}</div>`;
+  const row=(k,label)=>`<div class="row between" style="gap:6px"><span class="small" style="min-width:0;flex:1 1 140px">${label}</span><div class="stars" role="group" aria-label="${label}">${[1,2,3,4,5].map(n=>`<button aria-label="${n} de 5 estrelas" data-act="rvStar" data-who="${who}" data-k="${k}" data-n="${n}" class="${(v.notas[k]||0)>=n?'on':''}">★</button>`).join('')}</div></div>`;
+  return `<div class="card" style="background:var(--bg)"><p class="eyebrow">Avalie ${alvo}</p>
+    ${Object.entries(CRIT[who]).map(([k,l])=>row(k,l)).join('')}
+    <p class="small"><strong>Aconteceu algo?</strong> <span class="muted">Marque se houve:</span></p>
+    <div class="row" style="gap:6px">${Object.entries(OCORR).map(([k,l])=>`<button class="chip ${v.ocorr.includes(k)?'bad':''}" aria-pressed="${v.ocorr.includes(k)}" data-act="rvOcc" data-who="${who}" data-k="${k}">${l}</button>`).join('')}</div>
+    ${v.ocorr.length?`<div class="field"><label for="rvc-${who}">Conte o que aconteceu (opcional, só a central lê)</label><input id="rvc-${who}" maxlength="1000"></div>
+      ${v.ocorr.some(o=>GRAVES.includes(o))?'<p class="small" style="color:var(--sos)">Ocorrência grave: a conta denunciada será suspensa até a central analisar. Em perigo, ligue 190.</p>':''}`:''}
+    <div class="toggle"><button class="switch" role="switch" aria-checked="${v.block}" aria-label="Bloquear" data-act="rvBlock" data-who="${who}"></button><span>Bloquear ${alvo} <span class="small muted">(não seremos mais pareados)</span></span></div>
+    ${v.err?`<p class="err">${esc(v.err)}</p>`:''}
+    <button class="btn" data-act="rvSend" data-who="${who}">Enviar avaliação</button></div>`;
+}
+// ---------- cancelamento ----------
+// Passageira: grátis por 3 min depois do aceite; depois, taxa de deslocamento (R$ 5 + R$ 2,20/km já rodado, até R$ 20),
+// mais a espera se quem dirige já chegou. Com sinal fraco, a taxa vai para análise da central.
+// Quem dirige: a cada 10 cancelamentos nas últimas 100 corridas, a nota cai 2%, até 10%.
+const CANC={carencia:180,base:5,km:2.2,max:20,janela:100,passo:10,pct:0.02,teto:0.10};
+S.cancelModal=null; S.cancelTaxas=[]; S.drv.hist=[]; S.drv.ratingBase=null;
+function cancelPreview(r){
+  if(!r || r.status==='searching' || r.accT==null) return {gratis:true};
+  const passado=S.simT-r.accT, emb=r.status==='arrived';
+  if(passado<=CANC.carencia && !emb) return {gratis:true,resta:CANC.carencia-passado};
+  const desloc=Math.min(CANC.max,CANC.base+(r.approachDone||0)*CANC.km), espera=emb?liveFare(r).esperaEmb:0;
+  return {gratis:false,desist:emb,desloc,espera,total:Math.round((desloc+espera)*100)/100,fraco:weak('pass')||weak('drv')};
+}
+const drvPen = () => Math.min(CANC.teto, Math.floor(S.drv.hist.filter(x=>x==='c').length/CANC.passo)*CANC.pct);
+function applyDrvPen(){ if(S.drv.ratingBase==null) S.drv.ratingBase=S.drv.rating; S.drv.rating=Math.round(S.drv.ratingBase*(1-drvPen())*100)/100; }
+function drvHist(c){ S.drv.hist.push(c); S.drv.hist=S.drv.hist.slice(-CANC.janela); applyDrvPen(); }
+function cancelInfoPass(r){
+  const pv=cancelPreview(r);
+  if(pv.gratis) return pv.resta!=null?`<p class="small muted">Cancelamento grátis por mais ${mmss(pv.resta)}. Depois, cobramos a taxa de deslocamento.</p>`:'';
+  return `<p class="small" style="color:var(--warn)">Cancelar agora custa ${brl(pv.total)} (taxa de ${pv.desist?'desistência':'deslocamento'}).</p>`;
+}
+function cancelModal(){
+  const m=S.cancelModal; if(!m) return '';
+  if(m.who==='drv'){ const n=S.drv.hist.filter(x=>x==='c').length+1, p=Math.min(CANC.teto,Math.floor(n/CANC.passo)*CANC.pct);
+    return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="ccT"><div class="card"><p class="eyebrow">Cancelar corrida</p><h2 id="ccT">Tem certeza?</h2>
+      <p class="small">Cancelamentos afetam sua nota. A cada 10 cancelamentos nas últimas 100 corridas, sua nota cai 2%, até 10%.</p>
+      <div class="fare small"><span>Seus cancelamentos com este</span><span class="num">${n} de ${Math.min(CANC.janela,S.drv.hist.length+1)} corridas</span><span>Penalidade na nota</span><span class="num">${Math.round(p*100)}%</span></div>
+      <p class="small muted">A passageira volta para a fila e recebe outra pessoa motorista. Se for pneu, pane ou bateria, use o Socorro Motora.</p>
+      <div class="btns"><button class="btn ghost" data-act="cancelClose">Voltar</button><button class="btn" style="background:var(--sos);color:#fff" data-act="cancelDo">Cancelar corrida</button></div></div></div>`; }
+  const pv=cancelPreview(S.ride);
+  return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="ccT"><div class="card"><p class="eyebrow">Cancelar corrida</p><h2 id="ccT">${pv.desist?`${dm().A} motorista já chegou`:'Já passou o tempo grátis'}</h2>
+    <p class="small">O cancelamento é grátis até 3 minutos depois do aceite. Agora há uma taxa para cobrir o deslocamento ${dm().d} motorista.</p>
+    <div class="fare small"><span>Deslocamento</span><span class="num">${brl(pv.desloc)}</span>${pv.espera>0.004?`<span>Espera no embarque</span><span class="num">${brl(pv.espera)}</span>`:''}<span class="tot">Total</span><span class="tot v num">${brl(pv.total)}</span></div>
+    ${pv.fraco?`<div class="alert warn"><span>Sinal de internet fraco: a posição ${dm().d} motorista pode estar atrasada. A taxa não será cobrada agora; a central vai analisar antes.</span></div>`:''}
+    <div class="btns"><button class="btn ghost" data-act="cancelClose">Manter corrida</button><button class="btn" style="background:var(--sos);color:#fff" data-act="cancelDo">Cancelar e ${pv.fraco?'enviar para análise':'pagar '+brl(pv.total)}</button></div></div></div>`;
+}
+function cancResumo(){
+  const n=S.drv.hist.filter(x=>x==='c').length, p=drvPen(), prox=(Math.floor(n/CANC.passo)+1)*CANC.passo;
+  return `<div class="card"><p class="eyebrow">Cancelamentos</p><div class="fare small"><span>Nas últimas ${Math.max(S.drv.hist.length,0)} corridas aceitas (janela de 100)</span><span class="num">${n}</span>
+    <span>Penalidade na nota</span><span class="num" style="${p?'color:var(--sos)':''}">${Math.round(p*100)}%</span></div>
+    <p class="small muted">A cada 10 cancelamentos na janela, a nota cai 2%, até 10%. ${p<CANC.teto?`Faltam ${prox-n} para a próxima penalidade.`:''} Corridas concluídas tiram os cancelamentos antigos da janela.</p>
+    <button class="btn ghost sm" style="width:auto" data-act="cancDemo">Simular 9 cancelamentos (demo)</button></div>`;
+}
+function cancelTaxasBox(){
+  const p=S.cancelTaxas.filter(t=>t.status==='em_analise'); if(!p.length) return '';
+  return `<p class="eyebrow">Taxas de cancelamento</p><div class="log">${p.map(t=>`<div class="desvio" style="flex-direction:column;gap:6px"><span><strong>${brl(t.total)}</strong> · cancelamento com sinal de internet fraco às ${t.t}</span>
+    <span class="row" style="gap:6px"><button class="btn sm" style="width:auto" data-act="cancTaxa" data-i="${t.i}" data-ok="1">Cobrar</button><button class="btn sm ghost" style="width:auto" data-act="cancTaxa" data-i="${t.i}" data-ok="0">Dispensar</button></span></div>`).join('')}</div>`;
+}
+
+// ---------- chat da corrida ----------
+const QUICK = {pass:['Já estou no local','Estou chegando ao ponto','Pode me esperar 2 minutos?','Estou de blusa azul'],
+  drv:['Estou chegando','Cheguei ao ponto de embarque','Estou no carro da foto, placa conferida','Trânsito lento, chego em alguns minutos']};
+S.chat=[]; S.chatOpen={pass:false,drv:false}; S.chatSeen={pass:0,drv:0};
+const maskPhone = t => t.replace(/(?:\+?\d[\s().-]?){8,}/g,'[número oculto]');
+function chatBox(who){
+  const r=S.ride; if(!r || !['accepted','arrived','ontrip'].includes(r.status)) return '';
+  const msgs=S.chat.filter(m=>m.ride===r), open=S.chatOpen[who], novas=msgs.filter(m=>m.by!==who).length-S.chatSeen[who];
+  if(open) S.chatSeen[who]=msgs.filter(m=>m.by!==who).length;
+  const outro = who==='pass' ? `${dm().a} motorista` : 'a passageira';
+  return `<div class="card" style="background:var(--bg);gap:8px"><div class="row between"><p class="eyebrow" style="margin:0">Mensagens</p><button class="btn ghost sm" style="width:auto" data-act="chatToggle" data-who="${who}">${open?'Fechar':`Conversar com ${outro}`}${!open&&novas>0?` <span class="chip bad">${novas} nova${novas>1?'s':''}</span>`:''}</button></div>
+    ${open?`<div class="log" style="max-height:180px;overflow:auto">${msgs.length?msgs.map(m=>`<div style="${m.by===who?'align-self:flex-end;background:var(--accent-soft)':''};max-width:85%"><span class="small"><strong>${m.by===who?'Você':m.by==='pass'?esc(S.pass.data.name.split(' ')[0]):esc(S.drv.data.name.split(' ')[0])}</strong> · ${m.t}<br>${esc(m.texto)}</span></div>`).join(''):'<div><span class="small muted">Nenhuma mensagem ainda.</span></div>'}</div>
+      <div class="row" style="gap:6px">${QUICK[who].map(q=>`<button class="chip" data-act="chatQuick" data-who="${who}" data-t="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+      <div class="row" style="gap:6px;flex-wrap:nowrap"><input id="chatIn-${who}" maxlength="300" placeholder="Escreva uma mensagem" style="flex:1;min-width:0" aria-label="Mensagem"><button class="btn sm" style="width:auto" data-act="chatSend" data-who="${who}">Enviar</button></div>
+      <p class="small muted" style="margin:0">Números de telefone ficam ocultos. A conversa fica guardada para a sua segurança.</p>`:''}</div>`;
+}
+function chatPush(who,texto){
+  texto=(texto||'').trim(); if(!texto) return;
+  const limpo=maskPhone(texto), m={ride:S.ride,by:who,texto:limpo,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+  S.chat.push(m);
+  if(rid()) sync('POST',`/api/corridas/${rid()}/mensagens`,{por:who==='pass'?'passageira':'motorista',texto});
+  render();
+}
+
+function reportsBox(){
+  if(!S.reports.length) return '';
+  return `<p class="eyebrow">Denúncias</p><div class="log">${S.reports.map(d=>`<div class="sos" style="flex-direction:column;gap:6px"><span><strong>${esc(d.rotulos.join(', '))}</strong> contra ${esc(d.nome)} (${d.tipo})${d.grave?' · conta suspensa':''}</span>
+    ${d.comentario?`<span class="small" style="font-weight:500">“${esc(d.comentario)}”</span>`:''}
+    <span class="small">${d.status==='em_analise'?'Em análise':esc(d.status)}</span>
+    ${d.status==='em_analise'?`<span class="row" style="gap:6px"><button class="btn sm ghost" data-act="rptDecide" data-i="${d.i}" data-d="reativar">Reativar conta</button><button class="btn sm" style="background:var(--sos);color:#fff;width:auto" data-act="rptDecide" data-i="${d.i}" data-d="manter_suspensao">Manter suspensão</button></span>`:''}</div>`).join('')}</div>`;
+}
+
+function stars(r,key){ return `<div class="stars" role="group" aria-label="Nota">${[1,2,3,4,5].map(n=>`<button aria-label="${n} estrelas" data-act="rate" data-k="${key}" data-n="${n}" class="${(r[key]||0)>=n?'on':''}">★</button>`).join('')}</div>`; }
+function liveFare(r){
+  const f=fare({km:r.kmBase??r.km,min:Math.max(0,r.movingSec/60-(r.extraMin||0)),waitSec:r.waitSec,night:r.night,surge:r.surge,fiel:r.fiel,
+    vol:r.vol||0,stopCharge:(r.stopCharge||0)+Math.max(0,(r.stopCur||0)-P.stopFree)});
+  f.adicional=r.prepaid||0; f.total+=f.adicional; f.cheio+=f.adicional; return f;
+}
+// ---------- trânsito e rota alternativa ----------
+function pathUntil(p,d){ const out=[p[0]]; let left=d;
+  for(let i=1;i<p.length;i++){ const L=dist(p[i-1],p[i]); if(left<=L){ const q=pointAt(p,d); out.push({x:q.x,y:q.y}); return out; } out.push(p[i]); left-=L; }
+  return out; }
+function proposeAlt(r){
+  const q=pointAt(r.path,r.done), p={x:q.x,y:q.y}, d=r.d;
+  const remaining=r.km-r.done, off=6;
+  // desvia pelo eixo vertical e passa um pouco do destino, para fugir do trecho parado
+  const y2=Math.max(0,Math.min(MAPKM,d.y+(d.y<p.y?-off:off)));
+  const alt=[p,{x:p.x,y:y2},{x:d.x,y:y2},d];
+  const extraKm=Math.max(0,pathLen(alt)-remaining), extraMin=extraKm/SPEED*60;
+  const valor=Math.round((extraKm*P.km+extraMin*P.min)*r.surge*(r.night?1+P.night:1)*100)/100;
+  return {alt,extraKm,extraMin,valor,savesMin:Math.round((Math.max(0,remaining-JAM_KM)/SPEED + Math.min(remaining,JAM_KM)/(SPEED/3))*60 - pathLen(alt)/SPEED*60)};
+}
+function trafficBox(r,who){
+  const pr=r.proposal;
+  if(pr) return who==='pass'
+    ? `<div class="alert warn"><span>Trânsito intenso à frente. ${dm().A} motorista sugere uma rota alternativa: +${fmtKm(pr.extraKm)} e chegada cerca de ${Math.max(1,pr.savesMin)} min antes.</span>
+       <div class="row between"><span>Valor adicional, cobrado agora</span><span class="big num">${brl(pr.valor)}</span></div>
+       <div class="alert info"><span>Lembrete: confira o engarrafamento antes de aceitar.</span>
+         <ul class="steps small" style="font-weight:500"><li>No mapa, o trecho em <strong style="color:var(--sos)">vermelho</strong> é o trânsito parado e o tracejado <strong style="color:var(--warn)">laranja</strong> é a rota sugerida.</li><li>Velocidade atual do carro: <strong class="num">${Math.round(SPEED/3)} km/h</strong> (normal: ${SPEED} km/h).</li><li>Olhe pela janela e veja se o trânsito está mesmo parado.</li></ul>
+         <div class="toggle"><button class="switch" role="switch" aria-checked="${!!pr.seen}" aria-label="Confirmei o engarrafamento" data-act="altSeen"></button><span>Vi o engarrafamento e confirmo</span></div></div>
+       <div class="btns"><button class="btn ghost" data-act="altNo">Manter rota</button><button class="btn" data-act="altYes" ${pr.seen?'':'disabled'}>Aceitar e pagar</button></div>${S.pass.card?`<span class="small">Cobrado agora no cartão ${esc(S.pass.card.marca||'')} •••• ${esc(S.pass.card.final||'')}.</span>`:''}</div>`
+    : `<div class="alert warn"><span class="pulse">Aguardando a passageira confirmar a rota alternativa (+${fmtKm(pr.extraKm)}, ${brl(pr.valor)} adicional).</span></div>`;
+  if(r.traffic) return `<div class="alert warn"><span>Trânsito intenso no trajeto${r.altDeclined?'. A passageira preferiu manter a rota.':'.'}</span></div>`;
+  return '';
+}
+function waitBox(r,stop){
+  const t=stop?(r.stopCur||0):r.waitSec, lim=stop?P.stopFree:P.freeWait;
+  const free=Math.max(0,lim-t), charged=Math.max(0,t-lim);
+  const rate=P.waitMin*(r.night?1+P.night:1), f=liveFare(r);
+  return `<div class="alert ${charged>0?'warn':'info'}"><div class="row between"><span>${stop?'Parada em andamento':'Tempo de espera no embarque'}</span><span class="big num">${mmss(t)}</span></div>
+  <span class="small">${free>0?`Grátis por mais ${mmss(free)} (${stop?'1 min grátis em cada parada':'2 min grátis no embarque'}). Depois, ${brl(rate)}/min${r.night?' (com acréscimo noturno)':''}.`:`Cobrando ${brl(rate)}/min${r.night?' com acréscimo noturno':''}. ${brl((stop?f.esperaPar:f.esperaEmb)*(r.night?1+P.night:1))} até agora.`}</span></div>`;
+}
+function monitorBox(r,who){
+  const off=r.deviate>DEV_KM;
+  let h=`<div class="alert ${off?'warn':'ok'}"><span>${off?`Desvio de rota: ${fmtKm(r.deviate)} fora do trajeto. Central notificada.`:'Rota monitorada: dentro do trajeto previsto.'}</span></div>`;
+  if(who==='pass' && r.checkPending) h+=`<div class="alert bad"><span>Notamos uma mudança no trajeto. Está tudo bem?</span><div class="btns"><button class="btn ok" data-act="imok">Estou bem</button><button class="btn" style="background:var(--sos);color:#fff" data-act="sos" data-by="pass">Pedir socorro</button></div></div>`;
+  return h;
+}
+
+// ---------- telas: motorista ----------
+function drvView(){
+  const u=S.drv; if(!u.reg||S.editing==='drv') return regForm('drv');
+  if(S.assalto) return assaltoView();
+  if(u.suspended) return `<div class="card"><p class="eyebrow">Conta suspensa</p><h2>Sua conta está em análise</h2><p class="muted">Recebemos uma denúncia de ocorrência grave em uma corrida sua. Enquanto a central analisa, você não recebe chamadas. Você será avisad${dm().a} da decisão.</p></div>`;
+  const r=S.ride;
+  const top=`<div class="card"><div class="row between"><div class="person"><img class="av" src="${photoOf('drv')}" alt=""><div><h3>${esc(u.data.name)}</h3><p class="small muted">⚡ ${esc(u.data.car)} (${carKind(u.data.car)}) · <span class="num">${esc(u.data.plate.toUpperCase())}</span></p></div></div><button class="btn ghost sm" data-act="edit" data-who="drv">Cadastro</button></div>
+    <div class="row between"><div class="toggle"><button class="switch" role="switch" aria-checked="${u.online}" aria-label="Disponível" data-act="online"></button>${u.online?'Disponível':!docsOk()?'Documento vencido':u.jor.rest>0?'Em descanso':'Offline'}</div><div class="small muted">Hoje <strong class="num">${brl(u.earnings)}</strong> · ${u.trips} corridas</div></div>${btBox()}${docsBox()}${vidaBox()}${jornadaBox()}${payoutRow()}</div>`;
+  const p=S.pass, pcard=`<div class="person"><img class="av" src="${photoOf('pass')}" alt="Foto da passageira"><div><h3>${esc(p.data.name)}</h3><p class="small muted">★ ${p.rating.toString().replace('.',',')} · verificada</p></div></div>`;
+  if(!r || r.status==='cancel' || (r.status==='searching' && (r.declined||!u.online||(r.prefFem&&u.data.sex==='M')||blockedPair()||!offerMine(r))) ){
+    const list=Object.keys(S.regions).map(n=>({n,m:surgeOf(n),...S.regions[n]})).sort((a,b)=>b.m-a.m);
+    return top+`<div class="card"><p class="eyebrow">Demanda por região</p><h2>${u.online?'Aguardando chamadas':!docsOk()?'Documento vencido':u.jor.rest>0?'Em descanso obrigatório':'Você está offline'}</h2>
+      <div class="mapbox ${S.markArea?'click':''}">${mapSvg({idle:true,postos:true,clickable:S.markArea,act:'areaMap'})}</div>
+      <table><thead><tr><th>Região</th><th>Chamadas</th><th>Motoristas</th><th>Tarifa</th></tr></thead><tbody>
+      ${list.map(x=>`<tr><td>${x.n}</td><td class="num">${x.calls}</td><td class="num">${x.drivers}</td><td>${x.m>1?`<span class="chip hot">${String(x.m).replace('.',',')}x</span>`:'<span class="chip">normal</span>'}</td></tr>`).join('')}
+      </tbody></table><p class="small muted">Regiões com mais chamadas que motoristas ficam com tarifa dinâmica. No mapa, a rede credenciada: ⚡ recarga, E etanol, P pneu e B bateria.</p></div>${r&&r.status==='searching'&&u.online&&!r.declined&&!offerEleg(r)?`<div class="alert info small"><span>Há uma chamada ${!naArea(r.o)?'fora da sua área de atuação':`a ${fmtKm(offerInfo(r).km)} do embarque, acima de ${CH.km} km (há motoristas mais perto)`}. Ela não foi oferecida a você.</span></div>`:''}${agCardDrv()}${areaCard()}${favCardDrv()}${ocorrCard()}${verdeCard()}${cancResumo()}${reclCard('drv')}${resumoCard('drv')}${tipsBox('drv')}`;
+  }
+  if(r.status==='searching') return top+`<div class="card" style="border-color:var(--accent)"><p class="eyebrow">Nova chamada</p>${offerBox(r)}${pcard}${isFav()?`<span class="chip ok" style="align-self:flex-start">★ Você é favorit${dm().a} desta passageira</span>`:''}${routeObsBox(r.routeObs)}
+    <div class="mapbox">${mapSvg()}</div>
+    <div class="row"><span class="chip">${fmtKm(r.km)} · ${Math.round(r.min)} min</span><span class="chip">${esc(r.region)}</span>${r.surge>1?`<span class="chip hot">${String(r.surge).replace('.',',')}x</span>`:''}${r.night?'<span class="chip night">Noturno</span>':''}${r.vol?`<span class="chip">Porta-malas: ${r.vol} ${r.vol===1?'volume':'volumes'}</span>`:''}</div>
+    ${zoneAlertBox(r.zoneAlert)}
+    <div class="row between"><span>Você recebe</span><span class="big num">${brl(driverShare(r.f0))}</span></div>
+    ${u.payOk?'':'<div class="alert warn small"><span>Conecte sua conta de recebimento (acima) para aceitar corridas.</span></div>'}
+    <div class="btns"><button class="btn ghost" data-act="decline">Recusar</button><button class="btn" data-act="accept" ${u.payOk&&vidaOk()?'':'disabled'}>Aceitar</button></div>${vidaOk()?'':'<p class="small" style="color:var(--warn)">Faça a prova de vida para aceitar.</p>'}</div>`;
+  if(r.status==='accepted') return top+`<div class="card"><p class="eyebrow">Indo buscar a passageira</p>${pcard}${netBox('drv')}<div class="mapbox">${mapSvg()}</div><div class="toggle"><button class="switch" role="switch" aria-checked="${S.drv.autoArr!==false}" aria-label="Chegada automática pelo GPS" data-act="autoArr"></button><span>Chegada automática pelo GPS <span class="small muted">(marca sozinha a menos de 50 m do embarque)</span></span></div>
+    ${r.atPickup&&S.drv.autoArr===false?'<button class="btn" data-act="arrive">Cheguei ao embarque</button>':S.drv.autoArr===false?'<p class="small muted">Toque em "Cheguei" quando estiver no ponto.</p>':'<p class="small muted">Embarque no ponto A. A espera começa a contar quando você chegar.</p>'}
+    ${chatBox('drv')}${apoioBanner()}${apoioBtn('drv')}<button class="btn ghost" data-act="cancelDrv">Cancelar corrida</button></div>`;
+  if(r.status==='arrived') return top+`<div class="card"><p class="eyebrow">No ponto de embarque</p>${pcard}${netBox('drv')}${waitBox(r)}
+    <div class="alert info small"><span>Antes de iniciar, avise a passageira sobre os itens de segurança e o cinto. Com o ar ligado, vidros fechados.</span></div>${btLembrete()}
+    <div class="field"><label for="pinIn">Código informado pela passageira</label><input id="pinIn" inputmode="numeric" maxlength="4" placeholder="4 dígitos" style="font-family:var(--mono);font-size:1.3rem;letter-spacing:.3em"></div>
+    ${r.pinErr?'<p class="err">Código não confere. Confirme com a passageira.</p>':''}
+    <p class="small muted">Demo: o código é <span class="num">${r.pin}</span>.</p>
+    <button class="btn" data-act="start">Iniciar corrida</button>${chatBox('drv')}${apoioBanner()}${apoioBtn('drv')}<button class="btn ghost" data-act="cancelDrv">Cancelar corrida</button></div>`;
+  if(r.status==='ontrip') return top+`<div class="card"><p class="eyebrow">Em viagem</p>${pcard}${netBox('drv')}${btTem()&&!S.drv.bt.on?btLembrete():''}${monitorBox(r,'drv')}${trafficBox(r,'drv')}${ocorrCard(true)}<p class="small muted">A rota desta corrida foi compartilhada com o contato de emergência da passageira.</p>
+    <div class="mapbox">${mapSvg()}</div>${r.stopping?waitBox(r,true):''}
+    <div class="row between"><span>Valor até agora</span><span class="big num">${brl(liveFare(r).total)}</span></div>
+    <div class="btns"><button class="btn soft" data-act="stop">${r.stopping?'Retomar viagem':'Registrar parada'}</button><button class="btn ghost" data-act="deviate">${r.devTarget>0?'Voltar à rota':'Simular desvio (demo)'}</button></div>
+    ${r.proposal?'':!r.traffic?'<button class="btn ghost" data-act="traffic">Simular trânsito à frente (demo)</button>':r.altDeclined?'':'<button class="btn" data-act="altPropose">Propor rota alternativa à passageira</button>'}
+    ${chatBox('drv')}${apoioBanner()}${apoioBtn('drv')}</div>${tipsBox('drv')}`;
+  if(r.status==='done') return top+`<div class="card"><p class="eyebrow">Corrida concluída</p><div class="row between"><span>Seu ganho (85% + deslocamento)</span><span class="big num">${brl(driverShare(r.final))}</span></div>
+    ${fareRows(r.final,{...r,min:Math.max(0,r.movingSec/60-(r.extraMin||0))})}${payLines(r,'drv')}${apoioBanner()}
+    <p class="small muted">O chat com a passageira foi encerrado. Encontrou um objeto ou houve descumprimento das regras? Abra uma reclamação para a central.</p>${limpezaForm(r)}${reviewForm(r,'drv')}
+    <button class="btn" data-act="newride">Voltar a receber chamadas</button></div>${reclCard('drv')}`;
+  return top;
+}
+
+// ---------- central ----------
+function centralView(){
+  const r=S.ride;
+  const rows=Object.keys(S.regions).map(n=>{const x=S.regions[n],m=surgeOf(n);return `<tr><td>${n}</td>
+    <td><span class="pm"><button data-act="reg" data-n="${n}" data-k="calls" data-d="-1" aria-label="Menos chamadas">−</button><span class="num">${x.calls}</span><button data-act="reg" data-n="${n}" data-k="calls" data-d="1" aria-label="Mais chamadas">+</button></span></td>
+    <td><span class="pm"><button data-act="reg" data-n="${n}" data-k="drivers" data-d="-1" aria-label="Menos motoristas">−</button><span class="num">${x.drivers}</span><button data-act="reg" data-n="${n}" data-k="drivers" data-d="1" aria-label="Mais motoristas">+</button></span></td>
+    <td>${m>1?`<span class="chip hot">${String(m).replace('.',',')}x</span>`:'<span class="chip">1x</span>'}</td></tr>`}).join('');
+  const st={searching:'Buscando motorista',accepted:'Motorista a caminho',arrived:'No embarque',ontrip:'Em viagem',done:'Concluída',cancel:'Cancelada'};
+  return `<div class="central">
+    <div class="card"><p class="eyebrow">Central de segurança</p><h2>Monitoramento ao vivo</h2>
+      ${S.assalto?`<div class="alert bad"><span>MODO ASSALTO ativo desde ${S.assalto.t}: ${esc(S.drv.data.name)} em ${regionOf(S.assalto.pos)}. Acione a polícia e não ligue para o aparelho. A tela ${dm().d} motorista está disfarçada.</span><span class="small">Demo: para sair do modo na aba Motorista, toque em Ajuda e digite ${S.drv.data.cpf.replace(/\D/g,'').slice(-4)}.</span></div>`:''}
+      ${S.sos?`<div class="alert bad">SOS ativo, acionado ${S.sos.by==='pass'?'pela passageira':dm().p+' motorista'} às ${S.sos.t}. Localização sendo enviada.</div>`:''}
+      <div class="mapbox ${S.markZone||S.markPosto?'click':''}">${mapSvg({idle:!r,stale:true,clickable:S.markZone||S.markPosto,act:S.markPosto?'postoMap':'zoneMap',postos:true})}</div>
+      ${r?`<div class="row between"><span>${st[r.status]||''}</span><span class="row">${r.deviate>DEV_KM?'<span class="chip bad">Fora da rota</span>':r.status==='ontrip'?'<span class="chip ok">Na rota</span>':''}${r.stopping?'<span class="chip hot">Parada</span>':''}</span></div>
+      <div class="row"><div class="person"><img class="av" src="${photoOf('pass')}" alt=""><div><p class="small"><strong>${esc(S.pass.data.name)}</strong></p><p class="small muted">Passageira</p></div></div><div class="person"><img class="av" src="${photoOf('drv')}" alt=""><div><p class="small"><strong>${esc(S.drv.data.name)}</strong></p><p class="small muted num">${esc(S.drv.data.plate.toUpperCase())}</p></div></div></div>`:'<p class="muted">Nenhuma corrida em andamento.</p>'}
+      ${apoiosBox()}${taxasBox()}${cancelTaxasBox()}${reclBox()}${reportsBox()}<p class="eyebrow">Eventos</p>
+      <div class="log">${S.log.length?S.log.map(l=>`<div class="${l.type}"><time>${l.t}</time><span>${esc(l.text)}</span></div>`).join(''):'<div><span class="muted">Sem eventos ainda.</span></div>'}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      ${chamadasCentral()}${ocorrCentral()}${resumoCard('cen')}${zonesCard()}${postosCard()}
+      <div class="card"><p class="eyebrow">Tarifa dinâmica por região</p><h3>Chamadas × motoristas online</h3>
+        <div style="overflow-x:auto"><table><thead><tr><th>Região</th><th>Chamadas</th><th>Motoristas</th><th>Fator</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <p class="small muted">Até 1 chamada por motorista: 1x. Até 1,5: 1,2x. Até 2: 1,4x. Até 3: 1,6x. Até 4: 1,8x. Até 5: 2,0x. Até 6: 2,2x. Acima: 2,4x (teto).</p></div>
+      <div class="card"><p class="eyebrow">Regras da tarifa</p>
+        <div class="fare">
+          <span>Bandeirada</span><span class="num">${brl(P.base)}</span>
+          <span>Por km</span><span class="num">${brl(P.km)}</span>
+          <span>Por minuto em movimento</span><span class="num">${brl(P.min)}</span>
+          <span>Espera no embarque (após 2 min grátis)</span><span class="num">${brl(P.waitMin)}/min</span>
+          <span>Paradas (após 1 min grátis em cada)</span><span class="num">${brl(P.waitMin)}/min</span>
+          <span>Compras no porta-malas (3 a 4 / 5 a 6 / 7 a 8 / 9+ volumes)</span><span class="num">+3/5/7/10%</span>
+          <span>Acréscimo noturno (22h às 6h)</span><span class="num">+20%</span>
+          <span>Distância máxima por corrida</span><span class="num">${P.maxKm} km</span>
+          <span>Tarifa mínima</span><span class="num">${brl(P.minFare)}</span>
+          <span>Taxa da plataforma</span><span class="num">15%</span>
+          <span>Taxa de deslocamento (fixa, 100% para quem dirige)</span><span class="num">${brl(P.desloc)}</span>
+          <span>Desconto Motora Fiel (km e tempo, sem bandeirada)</span><span class="num">−5%</span>
+          <span>Taxa de limpeza (com fotos e nota fiscal, 100% para quem dirige)</span><span class="num">até ${brl(LIMP_MAX)}</span>
+        </div></div>
+    </div></div>`;
+}
+
+// ---------- SOS ----------
+function sosModal(){
+  if(S.sosPending) return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="sosT"><div class="card">
+    <h2 id="sosT">Acionar socorro?</h2><p class="muted">O alerta dispara automaticamente em</p><div class="count num">${S.sosPending.n}</div>
+    <div class="btns"><button class="btn ghost" data-act="sosCancel">Cancelar</button><button class="btn" style="background:var(--sos);color:#fff" data-act="sosNow">Acionar agora</button></div>
+    ${S.sosPending.by==='drv'?'<button class="btn ghost" style="border-color:var(--sos);color:var(--sos)" data-act="assaltoNow">Modo assalto: alerta silencioso, a tela fica normal</button>':''}</div></div>`;
+  if(S.sos){ const who=S.sos.by==='pass'?S.pass:S.drv;
+    return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="sosA"><div class="card">
+    <p class="eyebrow" style="color:var(--sos)">Socorro acionado às ${S.sos.t}</p><h2 id="sosA">Ajuda a caminho</h2>
+    <ol class="steps"><li>Central de segurança Motora notificada com sua localização ao vivo.</li><li>${esc(who.data.emerName)} recebeu um alerta no ${esc(who.data.emerPhone)}.</li><li>Áudio da viagem sendo gravado e enviado à central.</li><li>${S.sos.by==='pass'?dm().A+' motorista não é avisad'+dm().a:'A passageira não é avisada'}, para sua segurança.</li></ol>
+    <div class="alert bad"><span>Em perigo imediato, ligue para a Polícia Militar</span><div class="row between"><span class="big num">190</span><button class="btn sm" style="background:var(--sos);color:#fff;width:auto" data-act="copy190">Copiar número</button></div><span class="small">Central de Atendimento à Mulher: <span class="num">180</span></span></div>
+    <p class="small muted">Protótipo: nenhum alerta real é enviado.</p>
+    <button class="btn ghost" data-act="sosEnd">Estou segura, encerrar alerta</button></div></div>`; }
+  return '';
+}
+let sosTimer=null;
+function startSos(by){ if(S.sos||S.sosPending) return; S.sosPending={by,n:5}; render();
+  sosTimer=setInterval(()=>{ if(!S.sosPending){clearInterval(sosTimer);return;} S.sosPending.n--; if(S.sosPending.n<=0) fireSos(); else render(); },1000); }
+function fireSos(){ const by=S.sosPending.by; clearInterval(sosTimer); S.sosPending=null;
+  const c=carPos(); S.sos={by,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+  log('sos',`SOS acionado ${by==='pass'?'pela passageira '+S.pass.data.name:dm().p+' motorista '+S.drv.data.name}${c?` em ${regionOf(c)} (${c.x.toFixed(2)} km, ${c.y.toFixed(2)} km)`:''}. Contato de emergência avisado.`);
+  if(rid()) sync('POST',`/api/corridas/${rid()}/sos`,{por:by==='pass'?'passageira':'motorista'},j=>{ if(S.sos) S.sos.link=j.link; });
+  if(S.ride) S.ride.checkPending=false; render(); }
+
+// ---------- ações ----------
+const A = {
+  view:d=>{S.view=d.v;render();scrollTo(0,0)},
+  edit:d=>{S.editing=d.who;render()},
+  pick:d=>{S.pick=d.v;render()},
+  zoneMark:()=>{ S.markZone=!S.markZone; S.markPosto=false; render(); },
+  postoMark:()=>{ S.markPosto=!S.markPosto; S.markZone=false; render(); },
+  postoMap:(d,e)=>{ const svg=e.target.closest('svg'), b=svg.getBoundingClientRect();
+    const p={x:Math.round((e.clientX-b.left)/b.width*MAPKM), y:Math.round((e.clientY-b.top)/b.height*MAPKM)};
+    const nome=((document.getElementById('postoNome')||{}).value||'').trim()||`Posto ${regionOf(p)} ${S.postos.length+1}`, tipo=(document.getElementById('postoTipo')||{}).value||'recarga';
+    S.markPosto=false;
+    if(API.on) api('POST','/api/postos',{nome,tipo,x:p.x,y:p.y}).then(()=>loadPostos()).catch(err=>{ log('desvio','Servidor: '+apiErr(err)); render(); });
+    else S.postos.push({id:'local-'+Date.now(),nome,tipo,x:p.x,y:p.y,regiao:regionOf(p)});
+    const el=document.getElementById('postoNome'); if(el) el.value='';
+    log('info',`Central credenciou o posto ${nome} (${TIPO_POSTO[tipo]}) em ${regionOf(p)}.`); render(); },
+  postoDel:d=>{ const p=S.postos.find(x=>x.id===d.id); if(!p) return;
+    if(API.on) api('DELETE',`/api/postos/${encodeURIComponent(p.id)}`).then(()=>loadPostos()).catch(err=>{ log('desvio','Servidor: '+apiErr(err)); render(); });
+    else S.postos=S.postos.filter(x=>x.id!==p.id);
+    log('info',`Central descredenciou o posto ${p.nome}.`); render(); },
+  verdeCupom:d=>{ const p=S.postos.find(x=>x.id===d.id), v=nivelVerde(); if(!p||!verdeOk()) return; S.verde.err='';
+    if(v.saldo<=0){ S.verde.err='Você já usou todo o desconto deste mês.'; render(); return; }
+    if(API.on){ api('POST',`/api/motoristas/${S.drv.id}/motora-verde/cupom`,{posto_id:p.id}).then(j=>{ S.verde.cupom=j; render(); }).catch(e=>{ S.verde.err=apiErr(e); render(); }); return; }
+    S.verde.cupom={codigo:'MV-'+Math.random().toString(36).slice(2,8).toUpperCase(),posto:p.nome,posto_id:p.id,desconto_pct:v.pct,nivel:v.nome}; render(); },
+  verdeCancel:()=>{ S.verde.cupom=null; render(); },
+  verdeUse:()=>{ const c=S.verde.cupom, valor=Math.round(parseFloat(((document.getElementById('verdeValor')||{}).value||'').replace(',','.'))*100)/100;
+    if(!(valor>0)){ S.verde.err='Informe o valor abastecido.'; render(); return; }
+    const fim=a=>{ S.verde.hist.unshift(a); S.verde.cupom=null; S.verde.err='';
+      log('info',`Motora Verde: ${S.drv.data.name} abasteceu ${brl(a.valor)} em ${a.posto} e ganhou ${brl(a.desconto)} de desconto (${a.nivel}).`); render(); };
+    if(API.on){ api('POST','/api/postos/cupom',{codigo:c.codigo,posto_id:c.posto_id,valor}).then(fim).catch(e=>{ S.verde.err=apiErr(e); render(); }); return; }
+    const desconto=Math.round(Math.min(valor*c.desconto_pct,nivelVerde().saldo)*100)/100;
+    fim({posto:c.posto,valor,desconto,pago:valor-desconto,nivel:c.nivel}); },
+  zoneMap:(d,e)=>{ const svg=e.target.closest('svg'), b=svg.getBoundingClientRect();
+    const p={x:Math.round((e.clientX-b.left)/b.width*MAPKM), y:Math.round((e.clientY-b.top)/b.height*MAPKM)};
+    const nota=(document.getElementById('zoneNote')||{}).value||null, raio=+((document.getElementById('zoneRadius')||{}).value||10);
+    S.markZone=false;
+    if(API.on){ api('POST','/api/zonas-sinal',{x:p.x,y:p.y,raio_km:raio,nota}).then(()=>loadZones()).catch(err=>{ log('desvio','Servidor: '+apiErr(err)); render(); }); }
+    else S.zones.unshift({id:'man-'+Date.now(),tipo:'manual',centro:p,raio_km:raio,nivel:'fraco',regiao:regionOf(p),nota});
+    log('info',`Central marcou zona de sinal fraco em ${regionOf(p)} (raio ${raio} km).`); render(); },
+  zoneDel:d=>{
+    if(API.on){ api('DELETE',`/api/zonas-sinal/${encodeURIComponent(d.id)}`).then(()=>loadZones()).catch(err=>{ log('desvio','Servidor: '+apiErr(err)); render(); }); }
+    else S.zones=S.zones.filter(z=>z.id!==d.id);
+    log('info','Central removeu uma zona de sinal fraco.'); render(); },
+  map:(d,e)=>{ const svg=e.target.closest('svg'), b=svg.getBoundingClientRect();
+    const snap=v=>Math.max(0,Math.min(MAPKM,Math.round(v/2.5)*2.5));
+    const p={x:snap((e.clientX-b.left)/b.width*MAPKM), y:snap((e.clientY-b.top)/b.height*MAPKM)};
+    if(S.pick==='origin'){S.origin=p;S.pick='dest';} else S.dest=p; render(); },
+  request:()=>{ const e=estimate(S.origin,S.dest); if(e.km>P.maxKm||e.km===0) return;
+    if(S.agMode==='ag') return A.agCreate(e);
+    const reg=S.regions[e.region]; reg.calls++;
+    if(S.ride && ['done','cancel'].includes(S.ride.status) && !S.rideHist.includes(S.ride)) S.rideHist.unshift(S.ride);
+    S.ride={status:'searching',t0:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),o:{...S.origin},d:{...S.dest},path:e.br.path,routeObs:e.br.obs,favFirst:S.favFirst&&S.pass.favs.length>0,km:e.km,min:e.min,region:e.region,surge:e.surge,night:e.night,f0:e.f,fiel:S.pass.loyal,vol:e.vol,zoneAlert:routeAlert(e.br.path),
+      waitSec:0,movingSec:0,done:0,approachDone:0,stopping:false,deviate:0,devTarget:0,devAlert:false,checkPending:false,pin:String(Math.floor(1000+Math.random()*9000)),declined:false,prefFem:S.pass.prefFem};
+    sync('POST','/api/corridas',{passageira_id:S.pass.id,origem:S.ride.o,destino:S.ride.d,prefere_motorista_mulher:S.pass.prefFem,volumes:e.vol,hora:hourNow(),favoritos_primeiro:S.favFirst&&S.pass.favs.length>0},
+      j=>{ if(S.ride){ S.ride.id=j.id; S.ride.pin=j.pin; } });
+    if(offerEleg(S.ride)) offerStart(S.ride);
+    S.shared=false; log('info',`Corrida pedida em ${e.region}: ${fmtKm(e.km)}, estimativa ${brl(e.f.total)}${e.surge>1?` (dinâmica ${String(e.surge).replace('.',',')}x)`:''}${e.night?', noturna':''}.`); render(); },
+  cancel:()=>{ const pv=cancelPreview(S.ride); if(!pv.gratis){ S.cancelModal={who:'pass'}; render(); return; } A.cancelDo({},null,'pass'); },
+  cancelDrv:()=>{ S.cancelModal={who:'drv'}; render(); },
+  cancelClose:()=>{ S.cancelModal=null; render(); },
+  cancelDo:(d,e,whoArg)=>{ const who=whoArg||(S.cancelModal&&S.cancelModal.who)||'pass', r=S.ride; S.cancelModal=null;
+    if(who==='drv'){
+      if(rid()) sync('POST',`/api/corridas/${rid()}/cancelar`,{por:'motorista'});
+      drvHist('c'); const n=S.drv.hist.filter(x=>x==='c').length;
+      Object.assign(r,{status:'searching',declined:true,drvCancelled:true,approachDone:0,waitSec:0,accT:null});
+      log('desvio',`${S.drv.data.name} cancelou a corrida. ${n} cancelamento(s) nas últimas ${S.drv.hist.length} corridas; penalidade na nota: ${Math.round(drvPen()*100)}%. Buscando outra pessoa motorista.`);
+      render(); return; }
+    const pv=cancelPreview(r), cid=rid(), ti=S.cancelTaxas.length;
+    // a decisão da central só vai ao servidor se ele também deixou a taxa em análise
+    if(cid) sync('POST',`/api/corridas/${cid}/cancelar`,{por:'passageira'},j=>{ const t=S.cancelTaxas.find(x=>x.i===ti);
+      if(t) t.cid=(j.cancelamento||{}).status_taxa==='em_analise'?cid:null; });
+    S.regions[r.region].calls=Math.max(0,S.regions[r.region].calls-1); r.status='cancel';
+    if(pv.gratis) log('info','Corrida cancelada pela passageira (grátis, dentro de 3 minutos).');
+    else if(pv.fraco){ S.cancelTaxas.unshift({i:ti,total:pv.total,status:'em_analise',cid:null,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+      log('desvio',`Cancelamento com sinal de internet fraco. Taxa de ${brl(pv.total)} em análise pela central, sem cobrança automática.`); }
+    else { S.drv.earnings+=pv.total; r.cancelFee=pv.total; log('info',`Corrida cancelada pela passageira ${pv.desist?'depois da chegada (desistência)':'após 3 minutos'}: taxa de ${brl(pv.total)}, 100% para ${dm().a} motorista.`); }
+    render(); },
+  cancTaxa:d=>{ const t=S.cancelTaxas.find(x=>x.i===+d.i); if(!t) return; const ok=d.ok==='1';
+    t.status=ok?'cobrada':'dispensada'; if(ok) S.drv.earnings+=t.total;
+    if(t.cid) sync('POST',`/api/corridas/${t.cid}/taxa-cancelamento/decisao`,{aprovar:ok});
+    log('info',`Central ${ok?'cobrou':'dispensou'} a taxa de cancelamento de ${brl(t.total)}.`); render(); },
+  cancDemo:()=>{ for(let k=0;k<9;k++) drvHist('c'); log('info','Demo: 9 cancelamentos adicionados ao histórico.'); render(); },
+  chatToggle:d=>{ S.chatOpen[d.who]=!S.chatOpen[d.who]; render(); },
+  chatQuick:d=>chatPush(d.who,d.t),
+  chatSend:d=>{ const el=document.getElementById('chatIn-'+d.who); const v=el?el.value:''; if(el) el.value=''; chatPush(d.who,v); },
+  arrive:()=>{ const r=S.ride; if(!r||r.status!=='accepted') return; arrived(r,false); render(); },
+  autoArr:()=>{ S.drv.autoArr=!S.drv.autoArr; render(); },
+  decline:()=>{ const r=S.ride; if(!r.offer) offerStart(r); offerNext(r,'recusa'); if(rid()) sync('POST',`/api/corridas/${rid()}/recusar`,{motorista_id:S.drv.id}); render(); },
+  accept:()=>{ const r=S.ride; if(r.drvCancelled) return; r.accT=S.simT; if(rid()) sync('POST',`/api/corridas/${rid()}/aceitar`,{motorista_id:S.drv.id,posicao:S.drv.pos}); r.status='accepted'; r.approach=bestRoute(S.drv.pos,r.o).path; log('info',`${S.drv.data.name} aceitou e está a ${fmtKm(pathLen(r.approach))} do embarque.`); render(); },
+  start:()=>{ const v=(document.getElementById('pinIn')||{}).value; const r=S.ride; if(v!==r.pin){r.pinErr=true;render();return;}
+    r.pinErr=false; r.status='ontrip'; log('info',`Embarque confirmado com código. Espera no embarque: ${mmss(r.waitSec)}.`);
+    if(btTem() && !S.drv.bt.on) log('desvio',`${S.drv.data.name} iniciou a corrida sem o celular no Bluetooth do carro. Lembrete enviado.`);
+    // compartilhamento automático da rota com o contato de emergência da passageira
+    const c=S.pass.data; S.shared=true; r.autoShared=true;
+    log('info',`Rota compartilhada automaticamente com ${c.emerName} (${c.emerPhone}).`);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/iniciar`,{pin:v},j=>{ if(j.compartilhada_com) r.shareLink=j.compartilhada_com.link; });
+    render(); },
+  stop:()=>{ const r=S.ride; r.stopping=!r.stopping; if(!r.stopping) endStop(r); if(rid()) sync('POST',`/api/corridas/${rid()}/parada`,{ativa:r.stopping}); log('info', r.stopping?'Parada iniciada. 1 min grátis, depois cobra por minuto.':'Viagem retomada.'); render(); },
+  traffic:()=>{ const r=S.ride; r.traffic=true; if(rid()) sync('POST',`/api/corridas/${rid()}/transito`); log('desvio','Trânsito intenso detectado no trajeto da corrida.'); render(); },
+  altPropose:()=>{ const r=S.ride; r.proposal=proposeAlt(r);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa`,{rota:r.proposal.alt},j=>{ if(r.proposal&&j.proposta){ r.proposal.valor=j.proposta.valor; r.proposal.extraKm=j.proposta.km_extra; } }); log('info',`Motorista propôs rota alternativa: +${fmtKm(r.proposal.extraKm)}, adicional de ${brl(r.proposal.valor)}. Aguardando passageira.`); render(); },
+  altSeen:()=>{ const pr=S.ride.proposal; if(pr){ pr.seen=!pr.seen; render(); } },
+  altYes:()=>{ const r=S.ride, pr=r.proposal; if(!pr||!pr.seen) return;
+    if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa/resposta`,{aceita:true,viu_engarrafamento:true});
+    if(r.kmBase==null) r.kmBase=r.km;
+    r.path=[...pathUntil(r.path,r.done),...pr.alt.slice(1)]; r.km=pathLen(r.path);
+    r.extraKm=(r.extraKm||0)+pr.extraKm; r.extraMin=(r.extraMin||0)+pr.extraMin; r.prepaid=(r.prepaid||0)+pr.valor;
+    r.proposal=null; r.traffic=false; r.altUsed=true;
+    log('info',`Passageira confirmou visualmente o engarrafamento, autorizou a rota alternativa e pagou ${brl(pr.valor)} antecipadamente. Nova rota passa a ser monitorada.`); render(); },
+  altNo:()=>{ const r=S.ride; if(rid()) sync('POST',`/api/corridas/${rid()}/rota-alternativa/resposta`,{aceita:false}); r.proposal=null; r.altDeclined=true; log('info','Passageira recusou a rota alternativa. Rota original mantida.'); render(); },
+  deviate:()=>{ const r=S.ride; r.devTarget = r.devTarget>0?0:6; render(); },
+  imok:()=>{ S.ride.checkPending=false; log('info','Passageira confirmou que está tudo bem após o desvio.'); render(); },
+  share:()=>{ S.shared=true; const c=S.pass.data; log('info',`Viagem compartilhada com ${c.emerName}: link de acompanhamento ao vivo enviado (simulado).`); render(); },
+  rate:d=>{ S.ride[d.k]=+d.n; render(); },
+  rvStar:d=>{ const v=rv(S.ride,d.who); v.notas[d.k]=+d.n; v.err=''; render(); },
+  rvOcc:d=>{ const v=rv(S.ride,d.who); v.ocorr = v.ocorr.includes(d.k) ? v.ocorr.filter(x=>x!==d.k) : [...v.ocorr,d.k]; render(); },
+  rvBlock:d=>{ const v=rv(S.ride,d.who); v.block=!v.block; render(); },
+  rvSend:d=>{
+    const who=d.who, r=S.ride, v=rv(r,who), crit=Object.keys(CRIT[who]);
+    if(crit.some(k=>!v.notas[k])){ v.err='Dê de 1 a 5 estrelas em todos os critérios.'; render(); return; }
+    v.err=''; v.comentario=(document.getElementById('rvc-'+who)||{}).value||null; v.sent=true;
+    const alvo = who==='pass' ? 'drv' : 'pass', A_=S[alvo];
+    const media = crit.reduce((a,k)=>a+v.notas[k],0)/crit.length;
+    A_.ratingN=(A_.ratingN||20);
+    if(alvo==='drv'){ if(S.drv.ratingBase==null) S.drv.ratingBase=S.drv.rating; S.drv.ratingBase=Math.round(((S.drv.ratingBase*A_.ratingN)+media)/(A_.ratingN+1)*100)/100; A_.ratingN++; applyDrvPen(); }
+    else { A_.rating=Math.round(((A_.rating*A_.ratingN)+media)/(A_.ratingN+1)*100)/100; A_.ratingN++; }
+    if(v.block){ S[who].blocked=[...new Set([...(S[who].blocked||[]),alvo])]; log('info',`${S[who].data.name} bloqueou ${A_.data.name}.`); }
+    if(v.ocorr.length){
+      const grave=v.ocorr.some(o=>GRAVES.includes(o));
+      if(grave) A_.suspended=true;
+      S.reports.unshift({i:S.reports.length,alvo,nome:A_.data.name,tipo:alvo==='pass'?'passageira':'motorista',rotulos:v.ocorr.map(o=>OCORR[o]),comentario:v.comentario,grave,status:'em_analise',sid:null});
+      log('sos',`Denúncia de ${who==='pass'?'passageira':'motorista'} contra ${A_.data.name}: ${v.ocorr.map(o=>OCORR[o]).join(', ')}.${grave?' Conta suspensa até análise.':' Em análise pela central.'}`);
+    }
+    if(rid()) sync('POST',`/api/corridas/${rid()}/avaliacao`,{por:who==='pass'?'passageira':'motorista',notas:v.notas,ocorrencias:v.ocorr,comentario:v.comentario,bloquear:v.block},
+      j=>{ if(j.denuncia && S.reports[0] && !S.reports[0].sid) S.reports[0].sid=j.denuncia.id; });
+    render(); },
+  rptDecide:d=>{
+    const rp=S.reports.find(x=>x.i===+d.i); if(!rp) return;
+    rp.status = d.d==='reativar' ? 'Conta reativada' : 'Suspensão mantida';
+    S[rp.alvo].suspended = d.d!=='reativar';
+    if(rp.sid) sync('POST',`/api/denuncias/${rp.sid}/decisao`,{decisao:d.d});
+    log('info',`Central analisou a denúncia contra ${rp.nome}: ${rp.status.toLowerCase()}.`); render(); },
+  ocReport:d=>{ const p=carPos()||S.drv.pos, obs=((document.getElementById('ocObs')||{}).value||'').trim()||null, t=OC_TIPO[d.t];
+    const o={id:'oc-'+Math.random().toString(36).slice(2,8),tipo:d.t,x:Math.round(p.x*10)/10,y:Math.round(p.y*10)/10,por:S.drv.data.name,obs,exp:S.simT+t.h*3600,porDrv:true,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+    S.ocorr.unshift(o); const el=document.getElementById('ocObs'); if(el) el.value='';
+    log(['acidente','blitz','policiamento'].includes(d.t)?'desvio':'info',`${S.drv.data.name} alertou a central: ${t.n.toLowerCase()} em ${regionOf(o)}${obs?` (${obs})`:''}.`);
+    if(API.on && S.drv.id) sync('POST','/api/ocorrencias',{tipo:d.t,x:o.x,y:o.y,por:'motorista',por_id:S.drv.id,obs},j=>{ o.sid=j.id; o.id=j.id; });
+    render(); },
+  ocDel:d=>{ const o=S.ocorr.find(x=>x.id===d.id); if(!o) return; S.ocorr=S.ocorr.filter(x=>x!==o); log('info',`Central removeu o alerta de ${OC_TIPO[o.tipo].n.toLowerCase()} em ${regionOf(o)}.`);
+    if(o.sid) sync('DELETE',`/api/ocorrencias/${o.sid}`); render(); },
+  favAdd:()=>{ if(!S.pass.favs.includes('drv')) S.pass.favs.push('drv'); log('info',`${S.pass.data.name} marcou ${S.drv.data.name} como motorista favorit${dm().a}.`);
+    if(API.on && S.pass.id && S.drv.id) sync('POST',`/api/passageiras/${S.pass.id}/favoritos`,{motorista_id:S.drv.id}); render(); },
+  favDel:d=>{ S.pass.favs=[]; S.favFirst=false; log('info',`${d.by==='pass'?S.pass.data.name:S.drv.data.name} excluiu o favorito entre ${S.pass.data.name} e ${S.drv.data.name}.`);
+    if(API.on && S.pass.id && S.drv.id) sync('DELETE',d.by==='pass'?`/api/passageiras/${S.pass.id}/favoritos/${S.drv.id}`:`/api/motoristas/${S.drv.id}/favoritada-por/${S.pass.id}`); render(); },
+  favFirst:()=>{ S.favFirst=!S.favFirst; render(); },
+  agMode:d=>{ S.agMode=d.v; S.agErr=''; render(); },
+  agCreate:e=>{ const v=(document.getElementById('agWhen')||{}).value||'', ts=v?new Date(v).getTime():NaN, fav=((document.getElementById('agFav')||{}).value||'')==='drv';
+    S.agWhenV=v; const falta=(ts-Date.now())/1000;
+    S.agErr = isNaN(ts) ? 'Escolha a data e o horário do embarque.' : falta<AG_MIN_SEG-60 ? 'Agende com pelo menos 30 minutos de antecedência.' : falta>AG_MAX_DIAS*86400 ? 'Agende com até 7 dias de antecedência.' : '';
+    if(S.agErr){ render(); return; }
+    const a={i:S.ags.length,o:{...S.origin},d:{...S.dest},km:e.km,f0:e.f,when:ts,alvo:S.simT+falta,fav,status:'aberta',sid:null};
+    S.ags.push(a); S.agWhenV=null; S.agMode='agora';
+    log('info',`Corrida agendada para ${agTxt(ts)}: ${regionOf(a.o)} → ${regionOf(a.d)}, ${fmtKm(e.km)}, estimativa ${brl(e.f.total)}${fav?`, com ${S.drv.data.name} (favorit${dm().a})`:''}.`);
+    if(API.on && S.pass.id) sync('POST','/api/corridas',{passageira_id:S.pass.id,origem:a.o,destino:a.d,prefere_motorista_mulher:S.pass.prefFem,volumes:e.vol,hora:hourNow(),agendada_para:ts/1000,motorista_preferido:fav?S.drv.id:null},j=>{ a.sid=j.id; a.pin=j.pin; });
+    render(); },
+  agCancel:d=>{ const a=S.ags.find(x=>x.i===+d.i); if(!a) return; a.status='cancelada'; log('info',`Passageira cancelou a corrida agendada de ${agTxt(a.when)} (grátis).`);
+    if(a.sid) sync('POST',`/api/corridas/${a.sid}/cancelar`,{por:'passageira'}); render(); },
+  agAccept:d=>{ const a=S.ags.find(x=>x.i===+d.i); if(!a) return; a.status='confirmada';
+    log('info',`${S.drv.data.name} confirmou a corrida agendada de ${agTxt(a.when)}.`);
+    if(a.sid) sync('POST',`/api/corridas/${a.sid}/agendamento/aceitar`,{motorista_id:S.drv.id,posicao:S.drv.pos}); render(); },
+  agDesistir:d=>{ const a=S.ags.find(x=>x.i===+d.i); if(!a) return; a.status='aberta'; a.recusou=true; a.alertSaida=a.late=false; drvHist('c');
+    log('desvio',`${S.drv.data.name} desistiu da corrida agendada de ${agTxt(a.when)}. O agendamento voltou a ficar aberto. Penalidade na nota: ${Math.round(drvPen()*100)}%.`);
+    if(a.sid) sync('POST',`/api/corridas/${a.sid}/cancelar`,{por:'motorista'}); render(); },
+  agDemo:d=>{ const a=S.ags.find(x=>x.i===+d.i); if(!a) return; const p=agPrazo(a); a.alvo=S.simT+p.desloc+AG_MARGEM_SEG-1; render(); },
+  agGo:d=>{ const a=S.ags.find(x=>x.i===+d.i); if(!a || (S.ride && ['accepted','arrived','ontrip'].includes(S.ride.status))) return;
+    if(S.ride && ['done','cancel'].includes(S.ride.status) && !S.rideHist.includes(S.ride)) S.rideHist.unshift(S.ride);
+    const e=estimate(a.o,a.d); S.regions[e.region].calls++; a.status='iniciada';
+    S.ride={status:'accepted',t0:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),o:{...a.o},d:{...a.d},path:e.br.path,routeObs:e.br.obs,km:e.km,min:e.min,region:e.region,surge:e.surge,night:e.night,f0:e.f,fiel:S.pass.loyal,vol:e.vol,zoneAlert:routeAlert(e.br.path),
+      waitSec:0,movingSec:0,done:0,approachDone:0,stopping:false,deviate:0,devTarget:0,devAlert:false,checkPending:false,pin:a.pin||String(Math.floor(1000+Math.random()*9000)),declined:false,prefFem:false,
+      id:a.sid||undefined,agendada:a,accT:S.simT,approach:bestRoute(S.drv.pos,a.o).path};
+    S.shared=false; log('info',`${S.drv.data.name} saiu para buscar a passageira da corrida agendada de ${agTxt(a.when)} (${fmtKm(pathLen(S.ride.approach))} até o embarque).`);
+    if(a.sid) sync('POST',`/api/corridas/${a.sid}/agendamento/iniciar`,{motorista_id:S.drv.id,posicao:S.drv.pos},j=>{ if(S.ride&&S.ride.id===a.sid) S.ride.pin=j.pin||S.ride.pin; });
+    S.view='drv'; render(); },
+  resumo:d=>{ S.resumoOpen[d.who]=!S.resumoOpen[d.who]; render(); },
+  demoPerto:d=>{ S.demoPerto = d.v==='null'?null:+d.v; render(); },
+  areaSet:()=>{ const b=(document.getElementById('areaBairro')||{}).value; if(!b) return; const [x,y]=BAIRROS[b];
+    S.drv.area={nome:b,x,y}; S.markArea=false; log('info',`${S.drv.data.name} passou a atuar a até ${AREA_KM} km de ${b}.`);
+    if(API.on && S.drv.id) sync('PUT',`/api/motoristas/${S.drv.id}/area`,{bairro:b}); render(); },
+  areaMark:()=>{ S.markArea=!S.markArea; render(); },
+  areaMap:(d,e)=>{ const svg=e.target.closest('svg'), b=svg.getBoundingClientRect();
+    const p={x:Math.round((e.clientX-b.left)/b.width*MAPKM*10)/10, y:Math.round((e.clientY-b.top)/b.height*MAPKM*10)/10};
+    const nome=((document.getElementById('areaEnd')||{}).value||'').trim()||`Endereço marcado (${regionOf(p)})`;
+    S.drv.area={nome,...p}; S.markArea=false; log('info',`${S.drv.data.name} passou a atuar a até ${AREA_KM} km de ${nome}.`);
+    if(API.on && S.drv.id) sync('PUT',`/api/motoristas/${S.drv.id}/area`,{x:p.x,y:p.y,nome}); render(); },
+  areaDel:()=>{ S.drv.area=null; log('info',`${S.drv.data.name} voltou a atender toda a cidade.`); if(API.on && S.drv.id) sync('DELETE',`/api/motoristas/${S.drv.id}/area`); render(); },
+  reclOpen:d=>{ const w=d.who; S.reclF[w]={cat:Object.keys(RECL_CAT[w])[0],ride:reclRides().length?0:-1,entrega:'retirar',err:''}; render(); },
+  reclClose:d=>{ S.reclF[d.who]=null; render(); },
+  reclSend:d=>{ const w=d.who, f=S.reclF[w], g=id=>((document.getElementById(id)||{}).value||'').trim();
+    const desc=g(`reclDesc-${w}`), obj=g(`reclObj-${w}`), r=reclRides()[f.ride]||null;
+    f.err = desc.length<5 ? 'Conte o que aconteceu (pelo menos 5 letras).' : isObj(f.cat)&&!r ? 'Escolha a corrida em que o objeto ficou no carro.' : isObj(f.cat)&&!obj ? 'Diga qual é o objeto.' : '';
+    if(f.err){ render(); return; }
+    const ent=w==='pass'&&isObj(f.cat)?entregaInfo(r,f.entrega):null, u=w==='pass'?S.pass:S.drv;
+    const x={i:S.recl.length,who:w,nome:u.data.name,cat:f.cat,desc,ride:r,status:'aberta',resposta:null,sid:null,
+      protocolo:`MOT-${new Date().getFullYear()}-${String(S.recl.length+1).padStart(5,'0')}`,
+      obj:isObj(f.cat)?{descricao:obj,entrega:w==='pass'?f.entrega:'retirar',...(ent||{})}:null};
+    S.recl.unshift(x); S.reclF[w]=null;
+    log(isObj(f.cat)?'info':'desvio',`Reclamação ${x.protocolo} aberta por ${u.data.name} (${w==='pass'?'passageira':'motorista'}): ${RECL_CAT[w][f.cat]}.`);
+    if(API.on && u.id) sync('POST','/api/reclamacoes',{por:w==='pass'?'passageira':'motorista',autor_id:u.id,categoria:f.cat,descricao:desc,corrida_id:(r&&r.id)||null,objeto_descricao:obj||null,entrega:x.obj?x.obj.entrega:'retirar'},
+      j=>{ x.sid=j.id; x.protocolo=j.protocolo; if(j.objeto&&x.obj) Object.assign(x.obj,j.objeto); });
+    render(); },
+  reclAnd:d=>{ const x=S.recl.find(y=>y.i===+d.i); if(!x) return; const resp=((document.getElementById(`reclResp-${x.i}`)||{}).value||'').trim()||null;
+    x.status=d.s; if(resp) x.resposta=resp;
+    if(d.s==='entregue' && x.obj && x.obj.taxa){ S.drv.earnings+=x.obj.taxa; log('info',`Objeto da reclamação ${x.protocolo} entregue. Taxa de entrega de ${brl(x.obj.taxa)} cobrada da passageira, 100% para quem dirige.`); }
+    else log('info',`Reclamação ${x.protocolo}: ${RECL_ST[d.s]}.`);
+    if(x.sid) sync('POST',`/api/reclamacoes/${x.sid}/andamento`,{status:d.s,resposta:resp});
+    render(); },
+  newride:()=>{ if(S.ride && ['done','cancel'].includes(S.ride.status) && !S.rideHist.includes(S.ride)) S.rideHist.unshift(S.ride); S.ride=null; S.dest=null; S.shared=false; render(); },
+  vol:d=>{ S.pass.vol=Math.max(0,Math.min(BAG_MAX,(S.pass.vol||0)+ +d.d)); render(); },
+  prefFem:()=>{ S.pass.prefFem=!S.pass.prefFem; render(); },
+  jorDemo:d=>{ const J=S.drv.jor; if(d.k==='work'){ J.work=MAX_JOR-120; J.off=0; } else { J.rest=0; J.work=0; log('info','Descanso de 6 h concluído (demo). Liberado para dirigir.'); } render(); },
+  bt:()=>{ S.drv.bt.on=!S.drv.bt.on; btChanged(); },
+  vidaOpen:()=>{ S.vidaModal={}; render(); },
+  vidaClose:()=>{ S.vidaModal=null; render(); },
+  vidaSend:()=>{ const m=S.vidaModal, selfie=m.selfie||photoOf('drv'), min=vidaMin();
+    const ok=()=>{ S.drv.vida.ate=S.simT+min*60; S.drv.vidaPedida=false; S.vidaModal=null;
+      log('info',`Prova de vida de ${S.drv.data.name} confirmada (confere com o cadastro). Vale ${min} min.`);
+      if(m.goOnline && !S.drv.online){ S.drv.online=true; const reg=S.regions[regionOf(S.drv.pos)]; reg.drivers++; if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/disponibilidade`,{online:true}); }
+      render(); };
+    if(API.on && S.drv.id){ api('POST',`/api/motoristas/${S.drv.id}/prova-de-vida`,{selfie}).then(ok).catch(e=>{ m.err=apiErr(e); render(); }); return; }
+    ok(); },
+  bem:d=>{ const b=S.bem; if(!b) return; S.bem=null; const r=d.r;
+    const btm=b.motivo==='bluetooth', ctx=btm?'após o celular desconectar do carro':'após parada longa';
+    if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/bem-estar`,{resposta:r,parado_seg:b.parado,corrida_id:b.cid||null,motivo:b.motivo||'parada'});
+    if(r==='assalto'){ assaltoStart(ctx); return; }
+    if(r==='policia'){ try{ location.href='tel:190'; }catch(_){} }
+    if(r==='ajuda'){ S.apoioForm={by:'drv',motivo:'outro',err:''}; }
+    log(r==='ok'?'info':'sos', r==='ok'?`${S.drv.data.name} respondeu que está tudo bem ${ctx}.`
+      : r==='policia'?`${S.drv.data.name} ligou para a polícia (190) ${ctx}. Central acompanha a localização.`
+      : r==='sem_resposta'?`${S.drv.data.name} não respondeu ${btm?'depois que o celular desconectou do Bluetooth do carro':'à checagem de parada longa'}. Central deve ligar agora.`
+      : `${S.drv.data.name} pediu ajuda ${ctx}.`);
+    render(); },
+  assaltoNow:()=>assaltoStart('pelo botão de socorro'),
+  assaltoSair:()=>{ const v=prompt('Para sair, digite os 4 últimos dígitos do seu CPF'); const cpf=S.drv.data.cpf.replace(/\D/g,'');
+    if(v && v===cpf.slice(-4)){ S.assalto=null; if(rid()) sync('POST',`/api/corridas/${rid()}/sos/encerrar`); log('info',`${S.drv.data.name} encerrou o Modo assalto: está segur${dm().a}.`); }
+    render(); },
+  docDemo:()=>{ S.drv.data.crlvVal=isoIn(-3); if(S.drv.online){ S.drv.online=false; S.drv.vida.saidas.push(S.simT); S.drv.vida.ate=0; const reg=S.regions[regionOf(S.drv.pos)]; reg.drivers=Math.max(0,reg.drivers-1); }
+    if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/disponibilidade`,{online:false});
+    log('desvio',`CRLV de ${S.drv.data.name} venceu. Sem novas corridas até o envio do documento.`); render(); },
+  online:()=>{ const J=S.drv.jor;
+    if(!S.drv.online && !docsOk()){ log('desvio',`${S.drv.data.name} tentou ficar disponível com documento vencido.`); render(); return; }
+    if(!S.drv.online && J.rest>0){ S.drv.err=''; log('desvio',`${S.drv.data.name} tentou ficar disponível durante o descanso obrigatório.`); render(); return; }
+    if(!S.drv.online && !vidaOk()){ S.vidaModal={goOnline:true}; render(); return; }
+    if(S.drv.online){ S.drv.vida.saidas.push(S.simT); S.drv.vida.ate=0; S.drv.vidaPedida=false; }
+    S.drv.online=!S.drv.online; if(S.drv.id) sync('POST',`/api/motoristas/${S.drv.id}/disponibilidade`,{online:S.drv.online}); const reg=S.regions[regionOf(S.drv.pos)]; reg.drivers=Math.max(0,reg.drivers+(S.drv.online?1:-1)); render(); },
+  reg:d=>{ const x=S.regions[d.n]; x[d.k]=Math.max(0,x[d.k]+ +d.d); sync('PUT',`/api/regioes/${encodeURIComponent(d.n)}`,{chamadas:x.calls,motoristas:x.drivers}); render(); },
+  sos:d=>startSos(d.by),
+  sosCancel:()=>{ S.sosPending=null; clearInterval(sosTimer); render(); },
+  sosNow:()=>fireSos(),
+  sosEnd:()=>{ if(rid()) sync('POST',`/api/corridas/${rid()}/sos/encerrar`); log('info','Alerta de socorro encerrado: usuária confirmou que está segura.'); S.sos=null; render(); },
+  net:d=>{ NET.sim[d.who]=!NET.sim[d.who]; netChanged(); },
+  loyal:()=>{ const u=S.pass; u.loyal=!u.loyal; log('info',`${u.data.name} ${u.loyal?'entrou no':'saiu do'} Motora Fiel.`);
+    if(u.id) sync('POST',`/api/passageiras/${u.id}/fidelidade`,{ativo:u.loyal}); render(); },
+  addCard:()=>{
+    if(!API.on){ S.pass.card={marca:'visa',final:'4242',simulado:true}; log('info','Cartão de teste adicionado (simulado).'); render(); return; }
+    api('POST',`/api/passageiras/${S.pass.id}/cartao`).then(j=>{ if(j.cartao){ S.pass.card=j.cartao; log('info','Cartão de teste adicionado (Stripe em modo simulado).'); render(); } else openStripeCard(j); })
+      .catch(e=>{ log('desvio','Servidor: '+apiErr(e)); render(); });
+  },
+  payConnect:()=>{
+    if(!API.on){ S.drv.payOk=true; log('info','Conta de recebimento conectada (simulado).'); render(); return; }
+    api('POST',`/api/motoristas/${S.drv.id}/recebimentos`).then(j=>{ S.drv.payOk=j.ativo; S.drv.payUrl=j.ativo?null:j.url; if(j.ativo) log('info','Conta de recebimento conectada.'); render(); })
+      .catch(e=>{ log('desvio','Servidor: '+apiErr(e)); render(); });
+  },
+  payCheck:()=>{
+    api('GET',`/api/motoristas/${S.drv.id}/recebimentos`).then(j=>{ S.drv.payOk=j.ativo; if(j.ativo){ S.drv.payUrl=null; log('info','Conta de recebimento aprovada pela Stripe.'); } else log('desvio','A Stripe ainda pede: '+(j.pendencias||[]).join(', ')); render(); })
+      .catch(e=>{ log('desvio','Servidor: '+apiErr(e)); render(); });
+  },
+  copyLink:(d,e)=>{ const b=e.target, t=S.ride&&S.ride.shareLink; if(!t) return; try{ navigator.clipboard.writeText(t).then(()=>{b.textContent='Link copiado';},()=>{}); }catch(_){} },
+  tips:d=>{ S.tipsOpen[d.who]=!S.tipsOpen[d.who]; render(); },
+  apoioOpen:d=>{ S.apoioForm={by:d.by,motivo:null,err:''}; render(); },
+  apoioClose:()=>{ S.apoioForm=null; render(); },
+  apoioMot:d=>{ S.apoioForm.motivo=d.k; S.apoioForm.err=''; render(); },
+  apoioSend:()=>{ const f=S.apoioForm; if(!f.motivo){ f.err='Escolha o motivo do pedido de apoio.'; render(); return; }
+    const det=((document.getElementById('apoioDet')||{}).value||'').trim()||null, r=S.ride;
+    const pos=carPos()||r.o, tp=['pneu','bateria'].includes(f.motivo)?f.motivo:null;
+    const parceiro=tp?S.postos.filter(p=>p.tipo===tp).map(p=>({...p,km:Math.hypot(p.x-pos.x,p.y-pos.y)})).sort((a,b)=>a.km-b.km)[0]||null:null;
+    const ap={i:S.apoios.length,ride:r,by:f.by,motivo:f.motivo,det,parceiro,status:'aguardando',t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),sid:null};
+    S.apoios.unshift(ap); S.apoioForm=null;
+    const c=carPos();
+    log('sos',`Socorro Motora pedido ${f.by==='pass'?'pela passageira':dm().p+' motorista'}: ${MOT_APOIO[f.motivo]}${c?` em ${regionOf(c)}`:''}. Central deve entrar em contato.`);
+    if(rid()) sync('POST',`/api/corridas/${rid()}/apoio`,{por:f.by==='pass'?'passageira':'motorista',motivo:f.motivo,detalhe:det},j=>{ ap.sid=j.id; ap.cid=rid(); });
+    render(); },
+  apoioAct:d=>{ const ap=S.apoios.find(a=>a.i===+d.i); if(!ap) return;
+    ap.status = d.a==='atender' ? 'em_atendimento' : 'encerrado';
+    if(ap.sid) sync('POST',`/api/corridas/${ap.cid}/apoio/${ap.sid}/${d.a}`);
+    log('info', d.a==='atender' ? `Central está atendendo o pedido de apoio (${MOT_APOIO[ap.motivo]}).` : 'Central encerrou o pedido de apoio.'); render(); },
+  limpOpen:()=>{ S.ride.limp={motivo:'roupa_molhada',fotos:[],nf:null,err:''}; render(); },
+  limpClose:()=>{ S.ride.limp=null; render(); },
+  limpSend:()=>{ const r=S.ride, f=r.limp, g=id=>((document.getElementById(id)||{}).value||'').trim();
+    f.motivo=g('limpMot')||f.motivo; const valor=Math.round(parseFloat(g('limpValor').replace(',','.'))*100)/100, numero=g('limpNf'), desc=g('limpDesc')||null;
+    f.err = !(valor>0) ? 'Informe o valor do serviço de limpeza.' : valor>LIMP_MAX ? `O valor máximo é ${brl(LIMP_MAX)}.`
+      : !f.fotos.length ? 'Anexe pelo menos uma foto do veículo.' : !f.nf ? 'Anexe a nota fiscal do serviço de limpeza.' : !numero ? 'Informe o número da nota fiscal.' : '';
+    if(f.err){ render(); return; }
+    const t={i:S.taxas.length,ride:r,valor,motivo:f.motivo,desc,numero,fotos:f.fotos,nf:f.nf,status:'em_analise',contest:null,cid:rid()};
+    S.taxas.unshift(t); r.limp=null;
+    log('info',`${S.drv.data.name} pediu taxa de limpeza de ${brl(valor)} (${MOT_LIMP[t.motivo]}) com ${t.fotos.length} foto(s) e nota fiscal ${numero}. Em análise.`);
+    if(t.cid) sync('POST',`/api/corridas/${t.cid}/taxa-limpeza`,{valor,motivo:t.motivo,descricao:desc,fotos:t.fotos,nota_fiscal:t.nf,numero_nota:numero},null);
+    render(); },
+  limpContest:d=>{ const t=S.taxas.find(x=>x.i===+d.i), m=((document.getElementById('limpCont')||{}).value||'').trim(); if(!t) return;
+    if(m.length<3){ log('desvio','Contestação vazia: explique o motivo.'); render(); return; }
+    t.contest=m; if(t.cid) sync('POST',`/api/corridas/${t.cid}/taxa-limpeza/contestar`,{motivo:m});
+    log('info','Passageira contestou a taxa de limpeza.'); render(); },
+  taxaDecide:d=>{ const t=S.taxas.find(x=>x.i===+d.i); if(!t) return; const ok=d.ok==='1';
+    t.status = ok ? 'cobrada' : 'recusada';
+    if(ok) S.drv.earnings+=t.valor;
+    if(t.cid) sync('POST',`/api/corridas/${t.cid}/taxa-limpeza/decisao`,{aprovar:ok},j=>{ t.status=j.status; });
+    log('info',`Central ${ok?'aprovou e cobrou':'recusou'} a taxa de limpeza de ${brl(t.valor)}.`); render(); },
+  taxaOk:d=>{ const t=S.taxas.find(x=>x.i===+d.i); if(t) t.vistoPass=true; render(); },
+  copy190:(d,e)=>{ const b=e.target; try{ navigator.clipboard.writeText('190').then(()=>{b.textContent='Copiado';},()=>{b.textContent='Disque 190';}); }catch(_){ b.textContent='Disque 190'; } },
+};
+document.addEventListener('click',e=>{ const w=e.target.closest('[data-wa]');
+  if(w){ S.shared=true; log('info',`Passageira compartilhou a rota pelo WhatsApp${w.dataset.wa==='contato'&&S.pass.data.emerName?` com ${S.pass.data.emerName}`:''}.`); setTimeout(render,0); return; } });
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-act]'); if(!t) return; const f=A[t.dataset.act]; if(f){ e.preventDefault(); f(t.dataset,e); } });
+document.addEventListener('submit',e=>{ if(e.target.matches('form.reg')){ e.preventDefault(); submitReg(e.target); } });
+document.addEventListener('change',e=>{
+  const rk=e.target.dataset.recl, rf=rk&&S.reclF[e.target.dataset.who];
+  if(rf){ rf[rk]= rk==='ride' ? +e.target.value : e.target.value; rf.err=''; render(); return; }
+  if(e.target.id==='hourSel'){ render(); return; }
+  if(e.target.dataset.vida && S.vidaModal && e.target.files[0]){ const fr=new FileReader(); fr.onload=()=>{ S.vidaModal.selfie=fr.result; S.vidaModal.err=''; render(); }; fr.readAsDataURL(e.target.files[0]); return; }
+  const lk=e.target.dataset.limp, lf=S.ride&&S.ride.limp;
+  if(lk && lf && e.target.files.length){
+    const files=[...e.target.files].slice(0, lk==='fotos'?4:1);
+    if(files.some(x=>x.size>2*1024*1024)){ lf.err='Cada arquivo pode ter no máximo 2 MB.'; render(); return; }
+    Promise.all(files.map(x=>new Promise(ok=>{ const fr=new FileReader(); fr.onload=()=>ok(fr.result); fr.readAsDataURL(x); }))).then(urls=>{
+      if(lk==='fotos') lf.fotos=urls; else lf.nf=urls[0]; lf.err=''; render(); });
+    return; }
+  const who=e.target.dataset.photo; if(who && e.target.files[0]){ const fr=new FileReader();
+    const form=e.target.closest('form'); fr.onload=()=>{ S[who].photo=fr.result; // guarda o que já foi digitado
+      const fd=new FormData(form); for(const k of Object.keys(S[who].data)) if(fd.has(k)) S[who].data[k]=fd.get(k); render(); };
+    fr.readAsDataURL(e.target.files[0]); }
+});
+
+// ---------- simulação ----------
+function tick(){
+  const r=S.ride; if(!r) return;
+  const dt=TICK/1000*SIM, base=SPEED/3600*dt;
+  // corridas longas andam mais rápido na tela (~20 s), mas o tempo cobrado segue a velocidade real
+  const stepFor=len=>Math.max(base,len/90);
+  if(r.status==='accepted'){ const L=pathLen(r.approach); r.approachDone=Math.min(L,r.approachDone+stepFor(L));
+    if(r.approachDone>=L && !r.atPickup){ r.atPickup=true; if(S.drv.autoArr!==false) arrived(r,true); } }
+  else if(r.status==='arrived'){ r.waitSec+=dt; }
+  else if(r.status==='ontrip'){
+    if(r.stopping) r.stopCur=(r.stopCur||0)+dt; else { const slow=r.traffic?3:1, st=stepFor(r.km)/slow; r.done+=st; r.movingSec+=st/SPEED*3600*slow; }
+    r.deviate += Math.sign(r.devTarget-r.deviate)*Math.min(0.15,Math.abs(r.devTarget-r.deviate));
+    if(r.deviate>DEV_KM && !r.devAlert){ r.devAlert=true; r.checkPending=true; log('desvio',`Desvio de rota detectado (${fmtKm(r.deviate)} fora do trajeto). Passageira consultada.`); }
+    if(r.deviate<0.1 && r.devAlert && r.devTarget===0){ r.devAlert=false; log('info','Veículo de volta ao trajeto previsto.'); }
+    if(r.done>=r.km && r.deviate<0.1){ r.done=r.km; r.status='done'; r.stopping=false; endStop(r);
+      r.final=liveFare(r); S.drv.earnings+=driverShare(r.final); S.drv.trips++; drvHist('ok'); S.drv.pos={...r.d};
+      S.regions[r.region].calls=Math.max(0,S.regions[r.region].calls-1);
+      log('info',`Corrida concluída: ${brl(r.final.total)} (espera no embarque ${mmss(r.waitSec)}${r.stopSec?`, paradas ${mmss(r.stopSec)}`:''}).`);
+      if(rid()) sync('POST',`/api/corridas/${rid()}/finalizar`,null,j=>{ if(j.tarifa_final) r.final=j.tarifa_final; if(j.pagamentos) r.payments=j.pagamentos; }); }
+    else if(rid() && (r.posTick=(r.posTick||0)+1)%5===0){ const c=carPos(); sync('POST',`/api/corridas/${rid()}/posicao`,{x:c.x,y:c.y}); }
+  } else return;
+  r.netTick=(r.netTick||0)+1;
+  if(!weak('drv') || !r.seen || r.netTick%15===0){ const c=carPos(); if(c) r.seen={pos:{x:c.x,y:c.y},t:Date.now()}; }
+  if(document.querySelector('form.reg') || document.activeElement?.id==='pinIn') { if(!document.querySelector('form.reg')) refreshKeepingPin(); return; }
+  render();
+}
+function endStop(r){ if(!r.stopCur) return; r.stopSec=(r.stopSec||0)+r.stopCur; r.stopCharge=(r.stopCharge||0)+Math.max(0,r.stopCur-P.stopFree); r.stopCur=0; }
+// chegada ao embarque: automática pelo GPS (a menos de 50 m do ponto) ou pelo botão "Cheguei"
+function arrived(r,auto){ r.status='arrived'; r.autoArrived=auto; if(rid()) sync('POST',`/api/corridas/${rid()}/chegada`);
+  try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(_){}
+  log('info',`${auto?'Chegada automática pelo GPS':'Motorista marcou a chegada'}: no ponto de embarque. Passageira avisada; contagem de espera iniciada.`); }
+function refreshKeepingPin(){ const v=document.getElementById('pinIn').value; render(); const el=document.getElementById('pinIn'); if(el){el.value=v;el.focus();} }
+setInterval(tick,TICK);
+
+// ---------- render ----------
+function render(){
+  const pinVal=document.getElementById('pinIn')?.value;
+  const keep=['zoneNote','zoneRadius','rvc-pass','rvc-drv','apoioDet','limpValor','limpNf','limpDesc','limpMot','limpCont','postoNome','postoTipo','verdeValor','chatIn-pass','chatIn-drv','reclDesc-pass','reclDesc-drv','reclObj-pass','reclObj-drv','ocObs','agWhen','agFav','areaEnd','areaBairro',...S.recl.map(x=>`reclResp-${x.i}`)].map(id=>{ const el=document.getElementById(id); return el?[id,el.value,document.activeElement===el]:null; }).filter(Boolean);
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.view));
+  document.getElementById('modeInfo').textContent = API.on ? 'Conectado ao servidor Motora: cadastros, corridas e alertas são gravados.' : 'Protótipo: mapa, GPS e servidor simulados neste aparelho.';
+  document.getElementById('netSim').innerHTML = `Sinal: <button class="chip ${NET.sim.pass?'hot':''}" data-act="net" data-who="pass">Passageira ${quality('pass')}</button> <button class="chip ${NET.sim.drv?'hot':''}" data-act="net" data-who="drv">Motorista ${quality('drv')}</button> <button class="chip ${S.drv.bt.on?'':'hot'}" data-act="bt" aria-pressed="${!S.drv.bt.on}">Bluetooth do carro ${S.drv.bt.on?'conectado':'desconectado'}</button>`;
+  const n=isNight(hourNow()); document.getElementById('nightChip').innerHTML=`<span class="chip ${n?'night':''}">${n?'Tarifa noturna ativa':'Tarifa diurna'}</span>`;
+  document.getElementById('app').innerHTML = S.view==='central' ? centralView() : `<div class="phone">${S.view==='pass'?passView():drvView()}</div>`;
+  document.getElementById('modal').innerHTML = (S.assalto&&S.view==='drv') ? '' : (sosModal() || (S.view==='drv'?vidaModal()||bemModal():'') || cancelModal() || apoioModal());
+  const pin=document.getElementById('pinIn'); if(pin && pinVal) pin.value=pinVal;
+  for(const [id,v,f] of keep){ const el=document.getElementById(id); if(el){ el.value=v; if(f) el.focus(); } }
+  const showFab = S.view!=='central' && S[S.view].reg && !S.editing && !(S.assalto&&S.view==='drv');
+  document.getElementById('fab').innerHTML = showFab?`<button class="sos-fab" data-act="sos" data-by="${S.view}" aria-label="Botão de socorro">SOS</button>`:'';
+}
+render();
+</script>
+
+</body>
+</html>
