@@ -22,6 +22,9 @@ h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0;font-size:1.3
 .person img{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--map)}
 .alert{border-radius:12px;padding:10px 12px;font-weight:600}
 .ok{background:var(--ok-soft);color:var(--ok)} .warn{background:var(--warn-soft);color:var(--warn)} .bad{background:var(--sos-soft);color:var(--sos)}
+a.btn{display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;border-radius:12px;padding:12px}
+a.btn.soft{background:var(--bg);color:var(--accent);border:1px solid var(--line)}
+.links{display:flex;gap:12px;flex-wrap:wrap;justify-content:center} .links a{color:var(--accent);font-weight:600}
 svg{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--line)}
 </style>
 </head>
@@ -29,13 +32,29 @@ svg{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var
 <main>
   <h1>Motora</h1>
   <div id="app" class="card"><p class="muted">Carregando a corrida…</p></div>
-  <p class="small muted">Esta página se atualiza sozinha a cada poucos segundos. Em perigo imediato, ligue 190.</p>
+  <p class="small muted">Esta página se atualiza sozinha a cada poucos segundos e vale só durante a corrida. A localização no app de mapas é a do momento em que você toca no botão; volte aqui para vê-la de novo. Em perigo imediato, ligue 190.</p>
 </main>
 <script>
 const token = location.pathname.split('/').pop();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {buscando:'Procurando motorista', a_caminho:'Motorista a caminho do embarque', no_embarque:'Motorista no ponto de embarque',
   em_viagem:'Em viagem', concluida:'Chegou ao destino', cancelada:'Corrida cancelada'};
+// abre o app de mapas padrão do celular: Android usa geo: (o sistema escolhe o app), iPhone o Mapas
+const SO = /android/i.test(navigator.userAgent) ? 'android' : /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'ios' : 'outro';
+function mapaLink(g, nome){
+  const ll = `${g.lat},${g.lng}`, q = encodeURIComponent(nome);
+  if (SO === 'android') return `geo:${ll}?q=${ll}(${q})`;
+  if (SO === 'ios') return `https://maps.apple.com/?ll=${ll}&q=${q}`;
+  return `https://www.google.com/maps/search/?api=1&query=${ll}`;
+}
+function mapaBotoes(d){
+  if (!d.geo) return '';
+  const g = d.geo.posicao, ll = `${g.lat},${g.lng}`;
+  const carro = ['a_caminho','no_embarque','em_viagem'].includes(d.status) ? 'Localização do carro' : 'Local da corrida';
+  return `<a class="btn" href="${mapaLink(g, 'Motora: ' + carro)}">Abrir no meu app de mapas</a>
+    <a class="btn soft" href="${mapaLink(d.geo.destino, 'Motora: destino')}">Ver o destino no mapa</a>
+    <div class="links small"><span class="muted">Ou abra no</span><a href="https://www.google.com/maps/search/?api=1&query=${ll}">Google Maps</a><a href="https://waze.com/ul?ll=${ll}&navigate=no">Waze</a><a href="https://maps.apple.com/?ll=${ll}&q=Motora">Apple Mapas</a></div>`;
+}
 function mapa(d){
   const K = 300 / d.mapa_km, pt = p => `${p.x*K},${p.y*K}`;
   let s = `<svg viewBox="0 0 300 300" role="img" aria-label="Mapa da corrida"><rect width="300" height="300" fill="var(--map)"/>`;
@@ -49,20 +68,21 @@ function mapa(d){
 async function atualizar(){
   try {
     const r = await fetch('/api/acompanhar/' + encodeURIComponent(token));
-    if (!r.ok) { const e = await r.json().catch(() => ({})); document.getElementById('app').innerHTML = `<h2>Link indisponível</h2><p class="muted">${esc(e.detail || 'Não encontramos esta corrida.')}</p>`; return; }
+    if (!r.ok) { const e = await r.json().catch(() => ({})); clearInterval(ciclo); document.getElementById('app').innerHTML = `<h2>${r.status === 410 ? 'Corrida encerrada' : 'Link indisponível'}</h2><p class="muted">${esc(e.detail || 'Não encontramos esta corrida.')}</p>`; return; }
     const d = await r.json(), m = d.motorista;
     let alerta = d.sos ? '<div class="alert bad">SOS acionado. A central Motora está acompanhando. Se puder, ligue 190.</div>'
       : d.alerta_desvio ? '<div class="alert warn">O carro saiu do trajeto previsto. A central foi avisada.</div>'
+      : d.sinal_fraco ? `<div class="alert warn">Sinal de internet fraco no local da corrida. A posição do carro e o horário de chegada podem estar atrasados${d.atraso_posicao_seg>5?` (última posição há ${d.atraso_posicao_seg} s)`:''}.</div>`
       : d.status === 'concluida' ? `<div class="alert ok">${esc(d.passageira)} chegou ao destino.</div>`
       : d.status === 'em_viagem' ? '<div class="alert ok">Dentro do trajeto previsto.</div>' : '';
     document.getElementById('app').innerHTML = `
       <p class="small muted">Você está acompanhando a corrida de <strong>${esc(d.passageira)}</strong></p>
       <h2>${STATUS[d.status] || d.status}${d.status === 'em_viagem' ? ` · chega em ~${d.chegada_min} min` : ''}${d.parada ? ' (parada)' : ''}</h2>
-      ${alerta}${mapa(d)}
+      ${alerta}${mapa(d)}${mapaBotoes(d)}
       ${m.nome ? `<div class="person">${m.foto ? `<img src="${esc(m.foto)}" alt="Foto de quem dirige">` : ''}<div><strong>${esc(m.nome)}</strong><br><span class="muted small">${esc(m.modelo)} ${esc(m.cor)} · placa <strong>${esc(m.placa)}</strong></span></div></div>` : ''}`;
   } catch (e) { /* sem conexão: tenta de novo no próximo ciclo */ }
 }
-atualizar(); setInterval(atualizar, 3000);
+const ciclo = setInterval(atualizar, 3000); atualizar();
 </script>
 </body>
 </html>
